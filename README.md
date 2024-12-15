@@ -1,2 +1,2 @@
-# Interactive Map for the Long Dark
-The Long Dark Interactive Map
+# TLD-Interactive-Map
+An Interactive Map to View all Maps of the Game "The Long Dark"

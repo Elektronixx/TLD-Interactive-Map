@@ -11,6 +11,76 @@ body {
   height: 100vh; /* Make body take full viewport height */
 }
 
+#burger-menu {
+  position: absolute;
+  top: 10px;
+  left: 10px;
+  z-index: 9999;
+}
+
+.burger-icon {
+  font-size: 30px;
+  background: none;
+  border: none;
+  color: white;
+  cursor: pointer;
+}
+
+#menu-items {
+  display: none; /* Hidden by default */
+  background-color: #333;
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 250px;
+  height: 100%;
+  overflow-y: auto;
+  padding: 20px;
+  z-index: 9999;
+  transition: transform 0.3s ease; /* Smooth transition for sliding */
+  transform: translateX(-100%); /* Start hidden (off-screen) */
+}
+
+#menu-items .difficulty-buttons button, 
+#menu-items .category-container button {
+  background-color: #444;
+  color: white;
+  border: none;
+  padding: 10px;
+  width: 100%;
+  text-align: left;
+  cursor: pointer;
+}
+
+#menu-items .category-container details {
+  margin-top: 10px;
+  padding-left: 10px;
+}
+
+#menu-items .category-container details button {
+  background-color: #555;
+}
+
+#menu-items .category-container details summary {
+  color: white;
+  cursor: pointer;
+}
+
+#menu-items.open {
+  display: block; /* Makes the menu visible when 'open' class is added */
+  transform: translateX(0); /* Ensures it slides in */
+}
+
+#images-wrapper {
+  margin-left: 250px; /* Adjust based on the sidebar width */
+  padding: 20px;
+  overflow: auto;
+}
+
+button:focus {
+  outline: none;
+}
+
 .menu-container {
   position: relative;
   top: 0;
@@ -46,7 +116,7 @@ body {
 .category-container {
   display: flex;
   flex-direction: column;
-  align-items: center;
+  align-items: left;
   margin-top: 20px;
 }
 
@@ -86,7 +156,7 @@ body {
   display: none;
   text-align: center;
   margin-top: 20px;
-  position: relative;  /* Change from absolute to relative */
+  position: relative; /* Change from absolute to relative */
   cursor: grab;
   z-index: 1;
 }

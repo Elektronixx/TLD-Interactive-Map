@@ -9,78 +9,81 @@
 </head>
 <body>
 
-<div class="menu-container">
-  <div class="difficulty-buttons">
-    <button onclick="toggleCategory('pilgrim')">Pilgrim / Voyageur / Stalker</button>
-    <button onclick="toggleCategory('interloper')">Interloper / Misery</button>
-  </div>
-  <div class="category-container">
-    <div class="category pilgrim active">
-      <details>
-        <summary>Main Maps</summary>
-        <button onclick="showMap('map1')">Mystery Lake v1.09</button>
-        <button onclick="showMap('map2')">Coastal Highway v1.07</button>
-        <button onclick="showMap('map3')">Pleasant Valley v1.06</button>
-        <button onclick="showMap('map4')">Desolation Point v1.03</button>
-        <button onclick="showMap('map5')">Timberwolf Mountain v1.06</button>
-        <button onclick="showMap('map6')">Forlorn Muskeg v1.05</button>
-        <button onclick="showMap('map7')">Broken Railroad v1.03</button>
-        <button onclick="showMap('map8')">Mountain Town v1.04</button>
-        <button onclick="showMap('map9')">Hushed River Valley v1.03</button>
-        <button onclick="showMap('map10')">Bleak Inlet v1.04</button>
-        <button onclick="showMap('map11')">Ash Canyon v1.02</button>
-        <button onclick="showMap('map12')">Blackrock v1.01</button>
-      </details>
-      <details>
-        <summary>DLC Maps</summary>
-        <button onclick="showMap('map13')">Transfer Pass v1.01 (DLC)</button>
-        <button onclick="showMap('map14')">Forsaken Airfield v1.02 (DLC)</button>
-        <button onclick="showMap('map15')">Zone of Contamination v1.02 (DLC)</button>
-        <button onclick="showMap('map16')">Sundered Pass v1.01 (DLC)</button>
-        <button onclick="showMap('map17')">Far Range Branch Line v1.0 (DLC)</button>
-      </details>
-      <details>
-        <summary>Transition Maps</summary>
-        <button onclick="showMap('map18')">Ravine v1.07</button>
-        <button onclick="showMap('map19')">Winding River & Carter Hydro Dam v1.03</button>
-        <button onclick="showMap('map20')">Crumbling Highway v1.02</button>
-        <button onclick="showMap('map21')">Keeper's Pass v1.01</button>
-      </details>
+  <div id="burger-menu">
+    <button class="burger-icon" onclick="toggleMenu()">☰</button>
+    <div id="menu-items">
+      <div class="difficulty-buttons">
+        <button onclick="toggleCategory('pilgrim')">Pilgrim / Voyageur / Stalker</button>
+        <button onclick="toggleCategory('interloper')">Interloper / Misery</button>
+      </div>
+      <div class="category-container">
+        <div class="category pilgrim">
+          <details>
+            <summary>Main Maps</summary>
+			<button onclick="showMap('map1')">Mystery Lake v1.09</button>
+			<button onclick="showMap('map2')">Coastal Highway v1.07</button>
+			<button onclick="showMap('map3')">Pleasant Valley v1.06</button>
+			<button onclick="showMap('map4')">Desolation Point v1.03</button>
+			<button onclick="showMap('map5')">Timberwolf Mountain v1.06</button>
+			<button onclick="showMap('map6')">Forlorn Muskeg v1.05</button>
+			<button onclick="showMap('map7')">Broken Railroad v1.03</button>
+			<button onclick="showMap('map8')">Mountain Town v1.04</button>
+			<button onclick="showMap('map9')">Hushed River Valley v1.03</button>
+			<button onclick="showMap('map10')">Bleak Inlet v1.04</button>
+			<button onclick="showMap('map11')">Ash Canyon v1.02</button>
+			<button onclick="showMap('map12')">Blackrock v1.01</button>
+          </details>
+          <details>
+            <summary>DLC Maps</summary>
+			<button onclick="showMap('map13')">Transfer Pass v1.01</button>
+			<button onclick="showMap('map14')">Forsaken Airfield v1.02</button>
+			<button onclick="showMap('map15')">Zone of Contamination v1.02</button>
+			<button onclick="showMap('map16')">Sundered Pass v1.01</button>
+			<button onclick="showMap('map17')">Far Range Branch Line v1.0</button>
+          </details>
+          <details>
+            <summary>Transition Maps</summary>
+			<button onclick="showMap('map18')">Ravine v1.07</button>
+			<button onclick="showMap('map19')">Winding River & Carter Hydro Dam v1.03</button>
+			<button onclick="showMap('map20')">Crumbling Highway v1.02</button>
+			<button onclick="showMap('map21')">Keeper's Pass v1.01</button>
+          </details>
+        </div>
+        <div class="category interloper">
+          <details>
+            <summary>Main Maps (Interloper/Misery)</summary>
+			<button onclick="showMap('map22')">Mystery Lake v1.09</button>
+			<button onclick="showMap('map23')">Coastal Highway v1.07</button>
+			<button onclick="showMap('map24')">Pleasant Valley v1.06</button>
+			<button onclick="showMap('map25')">Desolation Point v1.03</button>
+			<button onclick="showMap('map26')">Timberwolf Mountain v1.06</button>
+			<button onclick="showMap('map27')">Forlorn Muskeg v1.05</button>
+			<button onclick="showMap('map28')">Broken Railroad v1.03</button>
+			<button onclick="showMap('map29')">Mountain Town v1.04</button>
+			<button onclick="showMap('map30')">Hushed River Valley v1.03</button>
+			<button onclick="showMap('map31')">Bleak Inlet v1.04</button>
+			<button onclick="showMap('map32')">Ash Canyon v1.02</button>
+			<button onclick="showMap('map33')">Blackrock v1.01</button>
+          </details>
+          <details>
+            <summary>DLC Maps (Interloper/Misery)</summary>
+			<button onclick="showMap('map34')">Transfer Pass v1.01</button>
+			<button onclick="showMap('map35')">Forsaken Airfield v1.02</button>
+			<button onclick="showMap('map36')">Zone of Contamination v1.02</button>
+			<button onclick="showMap('map37')">Sundered Pass v1.01</button>
+			<button onclick="showMap('map38')">Far Range Branch Line v1.0</button>
+          </details>
+          <details>
+            <summary>Transition Maps (Interloper/Misery)</summary>
+			<button onclick="showMap('map39')">Ravine v1.07</button>
+			<button onclick="showMap('map40')">Winding River & Carter Hydro Dam v1.03</button>
+			<button onclick="showMap('map41')">Crumbling Highway v1.02</button>
+			<button onclick="showMap('map42')">Keeper's Pass v1.01</button>
+          </details>
+        </div>
+      </div>
     </div>
-    <div class="category interloper">
-      <details>
-        <summary>Main Maps (Interloper)</summary>
-        <button onclick="showMap('map22')">Mystery Lake v1.09 (Interloper)</button>
-        <button onclick="showMap('map23')">Coastal Highway v1.07 (Interloper)</button>
-        <button onclick="showMap('map24')">Pleasant Valley v1.06 (Interloper)</button>
-        <button onclick="showMap('map25')">Desolation Point v1.03 (Interloper)</button>
-        <button onclick="showMap('map26')">Timberwolf Mountain v1.06 (Interloper)</button>
-        <button onclick="showMap('map27')">Forlorn Muskeg v1.05 (Interloper)</button>
-        <button onclick="showMap('map28')">Broken Railroad v1.03 (Interloper)</button>
-        <button onclick="showMap('map29')">Mountain Town v1.04 (Interloper)</button>
-        <button onclick="showMap('map30')">Hushed River Valley v1.03 (Interloper)</button>
-        <button onclick="showMap('map31')">Bleak Inlet v1.04 (Interloper)</button>
-        <button onclick="showMap('map32')">Ash Canyon v1.02 (Interloper)</button>
-        <button onclick="showMap('map33')">Blackrock v1.01 (Interloper)</button>
-      </details>
-      <details>
-        <summary>DLC Maps (Interloper)</summary>
-        <button onclick="showMap('map34')">Transfer Pass v1.01 (DLC) (Interloper)</button>
-        <button onclick="showMap('map35')">Forsaken Airfield v1.02 (DLC) (Interloper)</button>
-        <button onclick="showMap('map36')">Zone of Contamination v1.02 (DLC) (Interloper)</button>
-        <button onclick="showMap('map37')">Sundered Pass v1.01 (DLC) (Interloper)</button>
-        <button onclick="showMap('map38')">Far Range Branch Line v1.0 (DLC) (Interloper)</button>
-      </details>
-      <details>
-        <summary>Transition Maps (Interloper)</summary>
-        <button onclick="showMap('map39')">Ravine v1.07 (Interloper)</button>
-        <button onclick="showMap('map40')">Winding River & Carter Hydro Dam v1.03 (Interloper)</button>
-        <button onclick="showMap('map41')">Crumbling Highway v1.02 (Interloper)</button>
-        <button onclick="showMap('map42')">Keeper's Pass v1.01 (Interloper)</button>
-      </details>
-    </div>
   </div>
-</div>
 
 
   <div id="images-wrapper">

@@ -73,3 +73,8 @@ map.addEventListener('wheel', (e) => {
 	e.preventDefault();
 	});
  });
+ 
+ document.querySelector('.burger-icon').addEventListener('click', function() {
+  const menuItems = document.getElementById('menu-items');
+  menuItems.classList.toggle('open');  // Toggle the 'open' class to show/hide the menu
+});

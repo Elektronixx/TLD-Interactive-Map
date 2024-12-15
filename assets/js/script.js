@@ -74,7 +74,28 @@ map.addEventListener('wheel', (e) => {
 	});
  });
  
- document.querySelector('.burger-icon').addEventListener('click', function() {
+let opened = false;
+
+window.onload = function() {
+  var btn = document.getElementsByClassName('burgermenu')[0]; // Get the burger button
+  btn.addEventListener('click', onBtnClick); // Add event listener to toggle button
+};
+
+function onBtnClick(e) {
   const menuItems = document.getElementById('menu-items');
-  menuItems.classList.toggle('open');  // Toggle the 'open' class to show/hide the menu
-});
+  const btn = document.querySelector('.burgermenu');
+  
+  // Toggle the menu visibility
+  menuItems.classList.toggle('open'); // Show/hide the menu
+  
+  // Toggle the 'opened' class on the burger button
+  btn.classList.toggle('opened'); // Add/remove 'opened' class to switch to 'X' icon
+  
+  // Change the button content based on the 'opened' class
+  if (opened) {
+    btn.innerHTML = '&#9776;'; // Burger icon (☰)
+  } else {
+    btn.innerHTML = '&times;'; // 'X' icon (✖)
+  }
+  opened = !opened; // Toggle the opened state
+}

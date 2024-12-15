@@ -1,0 +1,325 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Interactive Map Viewer</title>
+  <style>
+	body {
+	  font-family: Arial, sans-serif;
+	  background-color: #2c2c2c;
+	  color: white;
+	  margin: 0;
+	  padding: 0;
+	  overflow: hidden; /* Prevent body scroll */
+	  user-select: none;
+	  display: flex; /* Use flex layout for the body */
+	  flex-direction: column; /* Stack children vertically */
+	  height: 100vh; /* Make body take full viewport height */
+	}
+
+	.menu-container {
+	  position: relative;
+	  top: 0;
+	  left: 0;
+	  right: 0;
+	  z-index: 9999;
+	  padding: 20px;
+	  background-color: #333;
+	  color: white;
+	  border-bottom: 3px solid #444;
+	}
+
+	.difficulty-buttons {
+	  display: flex;
+	  justify-content: center;
+	  margin: 10px 0;
+	}
+
+	.difficulty-buttons button {
+	  padding: 10px 20px;
+	  font-size: 16px;
+	  cursor: pointer;
+	  background-color: #444;
+	  color: white;
+	  border: none;
+	  margin: 0 10px;
+	}
+
+	.difficulty-buttons button:hover {
+	  background-color: #555;
+	}
+
+	.category-container {
+	  display: flex;
+	  flex-direction: column;
+	  align-items: center;
+	  margin-top: 20px;
+	}
+
+	.category-container .category {
+	  display: none;
+	}
+
+	.category-container .category.active {
+	  display: block;
+	}
+
+	.category-container .category button {
+	  padding: 10px;
+	  margin: 5px;
+	  background-color: #444;
+	  color: white;
+	  border: none;
+	  cursor: pointer;
+	}
+
+	.category-container .category button:hover {
+	  background-color: #555;
+	}
+
+	.images-wrapper {
+	  position: relative;
+	  top: 0;
+	  left: 0;
+	  margin: 0;
+	  padding: 0;
+	  width: 100%;
+	  height: 100%;
+	  overflow: hidden; /* Ensures no overflow issues */
+	}
+
+	.image-container {
+	  display: none;
+	  text-align: center;
+	  margin-top: 20px;
+	  position: relative;  /* Change from absolute to relative */
+	  cursor: grab;
+	  z-index: 1;
+	}
+
+	.image-container.active {
+	  display: block;
+	}
+
+	.image-container img {
+	  max-width: 100%;
+	  height: auto;
+	  transform-origin: center center;
+	  transition: transform 0.1s ease-out;
+	}
+
+	.image-container img.dragging {
+	  cursor: grabbing;
+	}
+  </style>
+</head>
+<body>
+
+<div class="menu-container">
+  <div class="difficulty-buttons">
+    <button onclick="toggleCategory('pilgrim')">Pilgrim / Voyageur / Stalker</button>
+    <button onclick="toggleCategory('interloper')">Interloper / Misery</button>
+  </div>
+  <div class="category-container">
+    <div class="category pilgrim active">
+      <details>
+        <summary>Main Maps</summary>
+        <button onclick="showMap('map1')">Mystery Lake v1.09</button>
+        <button onclick="showMap('map2')">Coastal Highway v1.07</button>
+        <button onclick="showMap('map3')">Pleasant Valley v1.06</button>
+        <button onclick="showMap('map4')">Desolation Point v1.03</button>
+        <button onclick="showMap('map5')">Timberwolf Mountain v1.06</button>
+        <button onclick="showMap('map6')">Forlorn Muskeg v1.05</button>
+        <button onclick="showMap('map7')">Broken Railroad v1.03</button>
+        <button onclick="showMap('map8')">Mountain Town v1.04</button>
+        <button onclick="showMap('map9')">Hushed River Valley v1.03</button>
+        <button onclick="showMap('map10')">Bleak Inlet v1.04</button>
+        <button onclick="showMap('map11')">Ash Canyon v1.02</button>
+        <button onclick="showMap('map12')">Blackrock v1.01</button>
+      </details>
+      <details>
+        <summary>DLC Maps</summary>
+        <button onclick="showMap('map13')">Transfer Pass v1.01 (DLC)</button>
+        <button onclick="showMap('map14')">Forsaken Airfield v1.02 (DLC)</button>
+        <button onclick="showMap('map15')">Zone of Contamination v1.02 (DLC)</button>
+        <button onclick="showMap('map16')">Sundered Pass v1.01 (DLC)</button>
+        <button onclick="showMap('map17')">Far Range Branch Line v1.0 (DLC)</button>
+      </details>
+      <details>
+        <summary>Transition Maps</summary>
+        <button onclick="showMap('map18')">Ravine v1.07</button>
+        <button onclick="showMap('map19')">Winding River & Carter Hydro Dam v1.03</button>
+        <button onclick="showMap('map20')">Crumbling Highway v1.02</button>
+        <button onclick="showMap('map21')">Keeper's Pass v1.01</button>
+      </details>
+    </div>
+    <div class="category interloper">
+      <details>
+        <summary>Main Maps (Interloper)</summary>
+        <button onclick="showMap('map22')">Mystery Lake v1.09 (Interloper)</button>
+        <button onclick="showMap('map23')">Coastal Highway v1.07 (Interloper)</button>
+        <button onclick="showMap('map24')">Pleasant Valley v1.06 (Interloper)</button>
+        <button onclick="showMap('map25')">Desolation Point v1.03 (Interloper)</button>
+        <button onclick="showMap('map26')">Timberwolf Mountain v1.06 (Interloper)</button>
+        <button onclick="showMap('map27')">Forlorn Muskeg v1.05 (Interloper)</button>
+        <button onclick="showMap('map28')">Broken Railroad v1.03 (Interloper)</button>
+        <button onclick="showMap('map29')">Mountain Town v1.04 (Interloper)</button>
+        <button onclick="showMap('map30')">Hushed River Valley v1.03 (Interloper)</button>
+        <button onclick="showMap('map31')">Bleak Inlet v1.04 (Interloper)</button>
+        <button onclick="showMap('map32')">Ash Canyon v1.02 (Interloper)</button>
+        <button onclick="showMap('map33')">Blackrock v1.01 (Interloper)</button>
+      </details>
+      <details>
+        <summary>DLC Maps (Interloper)</summary>
+        <button onclick="showMap('map34')">Transfer Pass v1.01 (DLC) (Interloper)</button>
+        <button onclick="showMap('map35')">Forsaken Airfield v1.02 (DLC) (Interloper)</button>
+        <button onclick="showMap('map36')">Zone of Contamination v1.02 (DLC) (Interloper)</button>
+        <button onclick="showMap('map37')">Sundered Pass v1.01 (DLC) (Interloper)</button>
+        <button onclick="showMap('map38')">Far Range Branch Line v1.0 (DLC) (Interloper)</button>
+      </details>
+      <details>
+        <summary>Transition Maps (Interloper)</summary>
+        <button onclick="showMap('map39')">Ravine v1.07 (Interloper)</button>
+        <button onclick="showMap('map40')">Winding River & Carter Hydro Dam v1.03 (Interloper)</button>
+        <button onclick="showMap('map41')">Crumbling Highway v1.02 (Interloper)</button>
+        <button onclick="showMap('map42')">Keeper's Pass v1.01 (Interloper)</button>
+      </details>
+    </div>
+  </div>
+</div>
+
+
+  <div id="images-wrapper">
+    <!-- Main Maps -->
+    <div class="image-container" id="map1"><img src="https://steamuserimages-a.akamaihd.net/ugc/37814745481350791/07616FEC9E85DC8552164D0D75C42F8B25DFEA7A/" alt="Mystery Lake v1.09"></div>
+    <div class="image-container" id="map2"><img src="https://steamuserimages-a.akamaihd.net/ugc/37814745481696951/E170F04CF9718C9422D70BDFA240C5832746D391/" alt="Coastal Highway v1.07"></div>
+    <div class="image-container" id="map3"><img src="https://steamuserimages-a.akamaihd.net/ugc/37814745481699824/C9745785ADF9844B76B23DB10D06B151EC80114B/" alt="Pleasant Valley v1.06"></div>
+    <div class="image-container" id="map4"><img src="https://steamuserimages-a.akamaihd.net/ugc/37814745481332331/1B0B936FB2CEA055BA1C3951C350CDE7B102E2EF/" alt="Desolation Point v1.03"></div>
+	<div class="image-container" id="map5"><img src="https://steamuserimages-a.akamaihd.net/ugc/37814745481400687/BC687FC6F0DFC0CF49BD570CC2E3DF82B3FDEA78/" alt="Timberwolf Mountain v1.06"></div>
+    <div class="image-container" id="map6"><img src="https://steamuserimages-a.akamaihd.net/ugc/37814745481323974/A8EDACD01C767BEDF3FA26B106079FF66A2FF53F/" alt="Forlorn Muskeg v1.05"></div>
+    <div class="image-container" id="map7"><img src="https://steamuserimages-a.akamaihd.net/ugc/37814745481696066/8674195A3C3098E9878C83512BF03B9CF9488AA9/" alt="Broken Railroad v1.03"></div>
+    <div class="image-container" id="map8"><img src="https://steamuserimages-a.akamaihd.net/ugc/37814745481699017/E90C0142CCAC23DA2C6C3276ED5C5B495B558E3B/" alt="Mountain Town v1.04"></div>
+    <div class="image-container" id="map9"><img src="https://steamuserimages-a.akamaihd.net/ugc/37814745481697948/7AA0DAB2DF429E9628DB12B7925FD7FFEF0199AD/" alt="Hushed River Valley v1.03"></div>
+    <div class="image-container" id="map10"><img src="https://steamuserimages-a.akamaihd.net/ugc/37814745481694098/3251230F92F7B16675334CCDF8159FFB4F524D7C/" alt="Bleak Inlet v1.04"></div>
+    <div class="image-container" id="map11"><img src="https://steamuserimages-a.akamaihd.net/ugc/37814745481693149/70429F0153C75BC7400704874EEB7891AB33573C/" alt="Ash Canyon v1.02"></div>
+    <div class="image-container" id="map12"><img src="https://steamuserimages-a.akamaihd.net/ugc/37814745483478462/F4AF10AC39344BC5FDB2D5464E72573D20817579/" alt="Blackrock v1.01"></div>
+    <!-- DLC Maps -->
+    <div class="image-container" id="map13"><img src="https://steamuserimages-a.akamaihd.net/ugc/37814745481303604/2F143B1F4452AE9F9688686307AEAFE77D64CD0C/" alt="Transfer Pass v1.01 (DLC)"></div>
+    <div class="image-container" id="map14"><img src="https://steamuserimages-a.akamaihd.net/ugc/37814745481300633/4D0E18C081174598B9D17AC8E170F0354E7BCC30/" alt="Forsaken Airfield v1.02 (DLC)"></div>
+    <div class="image-container" id="map15"><img src="https://steamuserimages-a.akamaihd.net/ugc/37814745481297380/BC0F009376B5F60EB884E903629FC6DCBC43A9A2/" alt="Zone of Contamination v1.02 (DLC)"></div>
+    <div class="image-container" id="map16"><img src="https://steamuserimages-a.akamaihd.net/ugc/37814745481293800/B618B2F10F9E696C9C9E97DD038F0B75C6ECC331/" alt="Sundered Pass v1.01 (DLC)"></div>
+    <div class="image-container" id="map17"><img src="https://steamuserimages-a.akamaihd.net/ugc/37812669431422742/CD9AF43DCC69CEDC91A49FDEC6E3F3E125049FAD/" alt="Far Range Branch Line v1.0 (DLC)"></div>
+	<!-- Transition Maps -->
+	<div class="image-container" id="map18"><img src="https://steamuserimages-a.akamaihd.net/ugc/37814745481701532/3E574FDCD020EC941832AACB3714FDF23ED3FD78/" alt="Ravine v1.07"></div>
+    <div class="image-container" id="map19"><img src="https://steamuserimages-a.akamaihd.net/ugc/37814745481283290/2F95CDD280AF1BD5D52072DD0B242519C099F433/" alt="Winding River & Carter Hydro Dam v1.03"></div>
+    <div class="image-container" id="map20"><img src="https://steamuserimages-a.akamaihd.net/ugc/37814745481274812/342BCF2DFFECDB3DDA0D51D4ABB53E4B6C9BCB5A/" alt="Crumbling Highway v1.02"></div>
+    <div class="image-container" id="map21"><img src="https://steamuserimages-a.akamaihd.net/ugc/37814745481276747/9690CC6CDA2BB2869FAF70E8F2E219986D5FC52D/" alt="Keeper's Pass v1.01"></div>
+	<!-- Interloper Main Maps -->
+	<div class="image-container" id="map22"><img src="https://steamuserimages-a.akamaihd.net/ugc/37814745481351403/DF78A6A5A0F8766BF9AE6D44A7AC658EA6D75A48/" alt="(Interloper) Mystery Lake v1.09"></div>
+    <div class="image-container" id="map23"><img src="https://steamuserimages-a.akamaihd.net/ugc/37814745481697237/BCE9865344B16E72C843274B0F413082B4CE9AFD/" alt="(Interloper) Coastal Highway v1.07"></div>
+    <div class="image-container" id="map24"><img src="https://steamuserimages-a.akamaihd.net/ugc/37814745481700323/6CB3406F97128B65D6508B26FFF117A1221D4EFE/" alt="(Interloper) Pleasant Valley v1.06"></div>
+    <div class="image-container" id="map25"><img src="https://steamuserimages-a.akamaihd.net/ugc/37814745481332746/E72BAE7FA29DBF76876A59063FF5145FA77FA4EB/" alt="(Interloper) Desolation Point v1.03"></div>
+	<div class="image-container" id="map26"><img src="https://steamuserimages-a.akamaihd.net/ugc/37814745481329519/EAC7153F23C219946789171B226556868ED2614E/" alt="(Interloper) Timberwolf Mountain v1.06"></div>
+    <div class="image-container" id="map27"><img src="https://steamuserimages-a.akamaihd.net/ugc/37814745481324566/5A3CA51E9B96CC0DDBA74E34C5887433456E42B0/" alt="(Interloper) Forlorn Muskeg v1.05"></div>
+    <div class="image-container" id="map28"><img src="https://steamuserimages-a.akamaihd.net/ugc/37814745481696468/C355359C5487B23BF2BBD00EFE4CEA054573F085/" alt="(Interloper) Broken Railroad v1.03"></div>
+    <div class="image-container" id="map29"><img src="https://steamuserimages-a.akamaihd.net/ugc/37814745481699464/16B898F15338D2A5ED837903C88B419569547E32/" alt="(Interloper) Mountain Town v1.04"></div>
+    <div class="image-container" id="map30"><img src="https://steamuserimages-a.akamaihd.net/ugc/37814745481698404/CAA4C361027CA65ED8E6FE305F8BC878C60F87B7/" alt="(Interloper) Hushed River Valley v1.03"></div>
+    <div class="image-container" id="map31"><img src="https://steamuserimages-a.akamaihd.net/ugc/37814745481694671/37F0FDFC96EC2575E51051571163D20BE40A36D5/" alt="(Interloper) Bleak Inlet v1.04"></div>
+    <div class="image-container" id="map32"><img src="https://steamuserimages-a.akamaihd.net/ugc/37814745481693702/16EF030EB787CBC744D8AEC61D4D85F8EC35DE7F/" alt="(Interloper) Ash Canyon v1.02"></div>
+    <div class="image-container" id="map33"><img src="https://steamuserimages-a.akamaihd.net/ugc/37814745481695550/71900725DE5594C519ECFD95DFBF5A8C7F1AED2C/" alt="(Interloper) Blackrock v1.01"></div>
+    <!-- Interloper DLC Maps -->
+    <div class="image-container" id="map34"><img src="https://steamuserimages-a.akamaihd.net/ugc/37814745481303971/1A9515074C6E2DFE5960A3886C0534BB20265B41/" alt="(Interloper) Transfer Pass v1.01 (DLC)"></div>
+    <div class="image-container" id="map35"><img src="https://steamuserimages-a.akamaihd.net/ugc/37814745481300997/57442ABAEB646FC2C6BF1AC62DE7D8E84F41D71D/" alt="(Interloper) Forsaken Airfield v1.02 (DLC)"></div>
+    <div class="image-container" id="map36"><img src="https://steamuserimages-a.akamaihd.net/ugc/37814745481297682/700B36ABF756FF502C7BE99DC37FEC59E09A563F/" alt="(Interloper) Zone of Contamination v1.02 (DLC)"></div>
+    <div class="image-container" id="map37"><img src="https://steamuserimages-a.akamaihd.net/ugc/37814745481294355/36AAC75152B0D618BE009C5AFD7FDBCD37CA17BD/" alt="(Interloper) Sundered Pass v1.01 (DLC)"></div>
+    <div class="image-container" id="map38"><img src="https://steamuserimages-a.akamaihd.net/ugc/37812669431423046/0306E8179F0F09FF0E9DC6AFB823FEB33D62AEF1/" alt="(Interloper) Far Range Branch Line v1.0 (DLC)"></div>
+	<!-- Interloper Transition Maps -->
+	<div class="image-container" id="map39"><img src="https://steamuserimages-a.akamaihd.net/ugc/37814745481702024/B5B784C90D6D2D080F98515DA61F621009947340/" alt="(Interloper) Ravine v1.07"></div>
+    <div class="image-container" id="map40"><img src="https://steamuserimages-a.akamaihd.net/ugc/37814745481283760/CD74A44711B35D34DC967262E7E90ECAA227B999/" alt="(Interloper) Winding River & Carter Hydro Dam v1.03"></div>
+    <div class="image-container" id="map41"><img src="https://steamuserimages-a.akamaihd.net/ugc/37814745481274812/342BCF2DFFECDB3DDA0D51D4ABB53E4B6C9BCB5A/" alt="(Interloper) Crumbling Highway v1.02"></div>
+    <div class="image-container" id="map42"><img src="https://steamuserimages-a.akamaihd.net/ugc/37814745481277043/6EFDAE3B58692376CA0E9A5A912846FA1AD7CC09/" alt="(Interloper) Keeper's Pass v1.01"></div>
+  </div>
+
+<script>
+  let currentCategory = 'pilgrim'; // Default to Pilgrim category
+
+  function toggleCategory(category) {
+    currentCategory = category;
+    document.querySelector('.pilgrim').classList.toggle('active', category === 'pilgrim');
+    document.querySelector('.interloper').classList.toggle('active', category === 'interloper');
+  }
+
+  function showMap(mapId) {
+    // Hide all maps
+    const images = document.querySelectorAll('.image-container');
+    images.forEach(image => {
+      image.classList.remove('active');
+      // Reset styles for inactive maps
+      image.style.left = '0px';
+      image.style.top = '0px';
+    });
+
+    // Show the selected map
+    const map = document.getElementById(mapId);
+    map.classList.add('active');
+    // Ensure the map starts at (0, 0)
+    map.style.left = '0px';
+    map.style.top = '0px';
+  }
+
+  // Implementing drag and drop functionality
+  let dragging = false;
+  let offsetX = 0, offsetY = 0;
+  let zoomLevel = 1;
+
+  document.querySelectorAll('.image-container').forEach(map => {
+    map.addEventListener('mousedown', (e) => {
+      if (map.classList.contains('active')) {
+        dragging = true;
+
+        // Calculate offsets relative to the element's current position
+        const computedStyle = window.getComputedStyle(map);
+        const currentLeft = parseFloat(computedStyle.left) || 0;
+        const currentTop = parseFloat(computedStyle.top) || 0;
+
+        offsetX = e.clientX - currentLeft;
+        offsetY = e.clientY - currentTop;
+
+        map.classList.add('dragging');
+        e.preventDefault();
+      }
+    });
+
+    document.addEventListener('mousemove', (e) => {
+      if (dragging) {
+        // Update position based on mouse movement and previously calculated offsets
+        map.style.left = `${e.clientX - offsetX}px`;
+        map.style.top = `${e.clientY - offsetY}px`;
+      }
+    });
+
+    document.addEventListener('mouseup', () => {
+      dragging = false;
+      map.classList.remove('dragging');
+    });
+
+    // Scroll zoom functionality
+    map.addEventListener('wheel', (e) => {
+      const img = map.querySelector('img');
+      if (e.deltaY < 0) {
+        zoomLevel += 0.1;
+      } else {
+        zoomLevel -= 0.1;
+      }
+      zoomLevel = Math.min(Math.max(zoomLevel, 0.5), 3); // Limit zoom level
+      img.style.transform = `scale(${zoomLevel})`;
+      e.preventDefault();
+    });
+  });
+</script>
+
+
+
+</body>
+</html>

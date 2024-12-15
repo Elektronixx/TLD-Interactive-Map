@@ -95,7 +95,6 @@ body {
 }
 
 #images-wrapper {
-  margin-left: 250px; /* Adjust based on the sidebar width */
   padding: 20px;
   overflow: auto;
 }

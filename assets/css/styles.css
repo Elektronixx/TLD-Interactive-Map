@@ -56,6 +56,17 @@ body {
   transform: translateY(-10px) rotate(-45deg);
 }
 
+.tld-logo {
+  width: 75px;       /* Example: Set width */
+  height: auto;       /* Maintain aspect ratio */
+  display: block;     /* Block-level display */
+  margin: auto;     /* Center the image horizontally */
+  margin-top: 10px;
+  border: 2px solid #fff; /* Optional: Add a white border */
+  border-radius: 8px; /* Optional: Rounded corners */
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.3); /* Optional: Add shadow */
+}
+
 /* Menu Items */
 #menu-items {
   position: fixed;
@@ -125,7 +136,7 @@ button:focus {
 .difficulty-buttons {
   display: grid;
   justify-content: safe center;
-  margin-top: 75px;
+  margin-top: 20px;
 }
 
 .difficulty-buttons button {

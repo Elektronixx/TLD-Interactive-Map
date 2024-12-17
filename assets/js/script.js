@@ -74,28 +74,11 @@ map.addEventListener('wheel', (e) => {
 	});
  });
  
-let opened = false;
+const burgerButton = document.getElementById('burger-button');
+const menuItems = document.getElementById('menu-items');
 
-window.onload = function() {
-  var btn = document.getElementsByClassName('burgermenu')[0]; // Get the burger button
-  btn.addEventListener('click', onBtnClick); // Add event listener to toggle button
-};
-
-function onBtnClick(e) {
-  const menuItems = document.getElementById('menu-items');
-  const btn = document.querySelector('.burgermenu');
-  
-  // Toggle the menu visibility
-  menuItems.classList.toggle('open'); // Show/hide the menu
-  
-  // Toggle the 'opened' class on the burger button
-  btn.classList.toggle('opened'); // Add/remove 'opened' class to switch to 'X' icon
-  
-  // Change the button content based on the 'opened' class
-  if (opened) {
-    btn.innerHTML = '&#9776;'; // Burger icon (☰)
-  } else {
-    btn.innerHTML = '&times;'; // 'X' icon (✖)
-  }
-  opened = !opened; // Toggle the opened state
-}
+// Toggle the burger menu and menu visibility
+burgerButton.addEventListener('click', () => {
+  burgerButton.classList.toggle('open'); // Animate burger to "X"
+  menuItems.classList.toggle('open');    // Slide the menu
+});

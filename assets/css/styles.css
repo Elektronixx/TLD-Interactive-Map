@@ -70,6 +70,8 @@ body {
   justify-content: center;
   transition: left 0.3s ease-in-out;
   z-index: 9998;
+  overflow-y: auto; /* Make the menu vertically scrollable */
+  overflow-x: hidden; /* Prevent horizontal scrolling */
 }
 
 #menu-items.open {

@@ -82,3 +82,16 @@ burgerButton.addEventListener('click', () => {
   burgerButton.classList.toggle('open'); // Animate burger to "X"
   menuItems.classList.toggle('open');    // Slide the menu
 });
+
+// Add event listeners to all difficulty buttons
+document.querySelectorAll('.difficulty-buttons button').forEach(button => {
+  button.addEventListener('click', () => {
+    // Remove 'active' class from all buttons
+    document.querySelectorAll('.difficulty-buttons button').forEach(btn => {
+      btn.classList.remove('active');
+    });
+    
+    // Add 'active' class to the clicked button
+    button.classList.add('active');
+  });
+});

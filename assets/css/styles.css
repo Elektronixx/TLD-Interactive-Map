@@ -11,6 +11,10 @@ body {
   height: 100vh; /* Make body take full viewport height */
 }
 
+summary {
+	margin: 0 0 5px;
+}
+
 #burger-menu {
   position: absolute;
   top: 10px;
@@ -22,9 +26,8 @@ body {
 .burger-icon {
   width: 50px;
   height: 50px;
-  background: #333;
+  background: #222;
   padding: 10px;
-  border: none;
   cursor: pointer;
   display: flex;
   flex-direction: column;
@@ -32,6 +35,8 @@ body {
   align-items: center;
   z-index: 10000;
   position: relative;
+  border: 2px solid #fff; /* Optional: Add a white border */
+  border-radius: 8px; /* Optional: Rounded corners */
 }
 
 .burger-icon .line {
@@ -45,7 +50,7 @@ body {
 
 /* Adjusted transformations for the "X" */
 .burger-icon.open .line:nth-child(1) {
-  transform: translateY(10px) rotate(45deg);
+  transform: translateY(9px) rotate(45deg);
 }
 
 .burger-icon.open .line:nth-child(2) {
@@ -53,7 +58,7 @@ body {
 }
 
 .burger-icon.open .line:nth-child(3) {
-  transform: translateY(-10px) rotate(-45deg);
+  transform: translateY(-9px) rotate(-45deg);
 }
 
 .tld-logo {
@@ -140,17 +145,28 @@ button:focus {
 }
 
 .difficulty-buttons button {
-  padding: 10px 20px;
+  padding: 10px 10px;
   font-size: 16px;
   cursor: pointer;
-  background-color: #444;
+  background-color: #222;
   color: white;
-  border: none;
-  margin: 0 10px;
+  margin: 0 0 10px;
+  border: 2px solid #fff; /* Optional: Add a white border */
+  border-radius: 8px; /* Optional: Rounded corners */
 }
 
 .difficulty-buttons button:hover {
   background-color: #555;
+}
+
+/* Highlight the selected difficulty-button */
+.difficulty-buttons button.active {
+  background-color: #1e2f4b; /* Highlight color (example: orange) */
+  color: white; /* Text color */
+  border: 2px solid #1e2f4b; /* Optional border for emphasis */
+  outline: none; /* Remove default focus outline */
+  box-shadow: 0 0 8px rgba(0, 128, 255, 0.7); /* Optional glow effect */
+  transition: background-color 0.2s ease, box-shadow 0.2s ease;
 }
 
 .category-container {
@@ -171,10 +187,12 @@ button:focus {
 .category-container .category button {
   padding: 10px;
   margin: 5px;
-  background-color: #444;
+  background-color: #222;
   color: white;
   border: none;
   cursor: pointer;
+  border: 2px solid #fff; /* Optional: Add a white border */
+  border-radius: 8px; /* Optional: Rounded corners */
 }
 
 .category-container .category button:hover {

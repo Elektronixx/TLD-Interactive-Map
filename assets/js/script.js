@@ -111,7 +111,7 @@ document.querySelectorAll('.difficulty-buttons button').forEach(button => {
 
         // Add 'active' class to the clicked button
         button.classList.add('active');
-        toggleCategory(button.textContent.trim().toLowerCase()); // Update category based on button text
+        setCategory(button.id.toLowerCase()); // Update category based on button text
     });
 });
 

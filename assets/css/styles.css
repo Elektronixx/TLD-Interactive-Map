@@ -39,6 +39,29 @@ summary {
   border-radius: 8px; /* Optional: Rounded corners */
 }
 
+.home-button {
+  width: 50px;
+  height: 50px;
+  position: fixed;
+  bottom: 20px;
+  right: 20px;
+  background: #222;
+  padding: 10px;
+  cursor: pointer;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-around;
+  align-items: center;
+  z-index: 10000;
+  border: 2px solid #fff; /* Optional: Add a white border */
+  border-radius: 8px; /* Optional: Rounded corners */
+}
+
+.home-button img {
+  width: 35px;
+  height: 35px;
+}
+
 .burger-icon .line {
   width: 100%;
   height: 4px;
@@ -138,6 +161,17 @@ button:focus {
   border-bottom: 3px solid #444;
 }
 
+#start-map-container {
+  width: 100%; /* Responsive width */
+  margin: auto;
+}
+
+#start-map-image {
+  display: block;
+  width: 100%; /* Responsive scaling */
+  height: auto; /* Maintain aspect ratio */
+}
+
 .difficulty-buttons {
   display: grid;
   justify-content: safe center;
@@ -225,7 +259,7 @@ button:focus {
 
 .image-container img {
   max-width: 100%;
-  height: auto;
+  width: 50%;
   transform-origin: center center;
   transition: transform 0.1s ease-out;
 }

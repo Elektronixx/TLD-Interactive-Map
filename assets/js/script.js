@@ -6,7 +6,7 @@ const maps = {
         'pilgrim': 'https://steamuserimages-a.akamaihd.net/ugc/37814745481323974/A8EDACD01C767BEDF3FA26B106079FF66A2FF53F/',
         'interloper': 'https://steamuserimages-a.akamaihd.net/ugc/37814745481324566/5A3CA51E9B96CC0DDBA74E34C5887433456E42B0/'
     },
-	'broken-railroad"': {
+	'broken-railroad': {
         'pilgrim': 'https://steamuserimages-a.akamaihd.net/ugc/37814745481696066/8674195A3C3098E9878C83512BF03B9CF9488AA9/',
         'interloper': 'https://steamuserimages-a.akamaihd.net/ugc/37814745481696468/C355359C5487B23BF2BBD00EFE4CEA054573F085/'
     },

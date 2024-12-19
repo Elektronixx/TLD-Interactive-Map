@@ -169,7 +169,6 @@ button:focus {
   display: block;
   width: 100%; /* Responsive scaling */
   height: auto; /* Maintain aspect ratio */
-  image-rendering: -webkit-optimize-contrast; /* For Chromium and WebKit-based browsers */
 }
 
 .difficulty-buttons {

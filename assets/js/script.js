@@ -162,7 +162,3 @@ function showStartMap() {
         image.style.top = '0px';
     });
 }
-
-const img = document.querySelector('#start-map-image');
-console.log('Natural size:', img.naturalWidth, img.naturalHeight);
-console.log('Rendered size:', img.clientWidth, img.clientHeight);

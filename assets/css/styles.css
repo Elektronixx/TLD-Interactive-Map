@@ -46,7 +46,6 @@ summary {
   bottom: 20px;
   right: 20px;
   background: #222;
-  padding: 10px;
   cursor: pointer;
   display: flex;
   flex-direction: column;
@@ -170,6 +169,7 @@ button:focus {
   display: block;
   width: 100%; /* Responsive scaling */
   height: auto; /* Maintain aspect ratio */
+  image-rendering: -webkit-optimize-contrast; /* For Chromium and WebKit-based browsers */
 }
 
 .difficulty-buttons {

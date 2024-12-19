@@ -232,4 +232,5 @@ function showStartMap() {
         image.style.left = '0px';
         image.style.top = '0px';
     });
+	document.querySelector('#map-image img').src = '';
 }

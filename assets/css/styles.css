@@ -162,7 +162,6 @@ button:focus {
 
 #start-map-container {
   width: 100%; /* Responsive width */
-  margin: auto;
 }
 
 #start-map-image {

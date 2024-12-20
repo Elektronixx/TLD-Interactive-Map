@@ -139,11 +139,6 @@ summary {
   color: #ff9800;
 }
 
-#images-wrapper {
-  padding: 20px;
-  overflow: auto;
-}
-
 button:focus {
   outline: none;
 }
@@ -231,7 +226,7 @@ button:focus {
   background-color: #555;
 }
 
-.images-wrapper {
+#images-wrapper {
   position: relative;
   top: 0;
   left: 0;

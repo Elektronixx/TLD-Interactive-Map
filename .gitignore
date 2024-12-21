@@ -17,8 +17,8 @@ jspm_packages/
 *.local
 .htmlhintrc
 .prettierrc
-.stylelintrc.json
 eslint.config.mjs
+*.json
 
 # OS generated files
 .DS_Store

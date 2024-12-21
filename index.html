@@ -10,21 +10,17 @@
     />
     <title>Interactive Map Viewer</title>
     <!-- Link to external CSS -->
+	<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
     <link rel="stylesheet" href="assets/css/styles.css" />
   </head>
   <body>
-    <div id="burger-menu">
-      <button class="burger-icon" id="burger-button" aria-label="Menu">
-        <div class="line"></div>
-        <div class="line"></div>
-        <div class="line"></div>
-      </button>
-      <div id="menu-items">
-        <img
-          src="https://styles.redditmedia.com/t5_2ygr3/styles/communityIcon_otm5gkx4px121.jpg"
-          class="tld-logo"
-          alt="The Long Dark Logo"
-        />
+  
+  <div id="cog-icon" class="cog-icon">
+    <i class="fas fa-cog"></i>
+  </div>
+  <div id="settings-popup" class="settings-popup">
+    <div class="popup-content">
+      <h2>Difficulty Settings</h2>
         <div class="difficulty-buttons">
           <button id="pilgrim" class="active" onclick="setCategory('pilgrim')">
             Pilgrim / Voyageur / Stalker
@@ -33,8 +29,10 @@
             Interloper / Misery
           </button>
         </div>
-      </div>
+      <h2>Credits</h2>
+      <p>Credits of other websites...</p>
     </div>
+  </div>
 
     <div id="start-map-container">
       <img

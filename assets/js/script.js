@@ -203,14 +203,6 @@ document.querySelectorAll('.image-container').forEach((map) => {
   });
 });
 
-// Burger menu toggle
-const burgerButton = document.getElementById('burger-button');
-const menuItems = document.getElementById('menu-items');
-burgerButton.addEventListener('click', () => {
-  burgerButton.classList.toggle('open');
-  menuItems.classList.toggle('open');
-});
-
 // Difficulty button click handler
 document.querySelectorAll('.difficulty-buttons button').forEach((button) => {
   button.addEventListener('click', () => {
@@ -273,3 +265,35 @@ function showStartMap() {
   });
   document.querySelector('#map-image img').src = '';
 }
+
+document.addEventListener('DOMContentLoaded', () => {
+  const cogIconContainer = document.getElementById('cog-icon');
+  const cogIcon = cogIconContainer.querySelector('i');
+  const settingsPopup = document.getElementById('settings-popup');
+
+  // Function to toggle the popup and rotate the cog icon
+  const togglePopup = () => {
+    if (settingsPopup.style.display === 'block') {
+      settingsPopup.style.display = 'none';
+      cogIcon.classList.remove('rotate');
+    } else {
+      settingsPopup.style.display = 'block';
+      cogIcon.classList.add('rotate');
+    }
+  };
+
+  // Attach the toggle function to both the cog icon and its container
+  cogIconContainer.addEventListener('click', togglePopup);
+  cogIcon.addEventListener('click', (event) => {
+    event.stopPropagation();
+    togglePopup();
+  });
+
+  // Close the popup when clicking outside of it
+  window.addEventListener('click', (event) => {
+    if (event.target !== settingsPopup && event.target !== cogIconContainer && !settingsPopup.contains(event.target)) {
+      settingsPopup.style.display = 'none';
+      cogIcon.classList.remove('rotate');
+    }
+  });
+});

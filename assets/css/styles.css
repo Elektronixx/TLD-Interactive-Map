@@ -97,17 +97,6 @@ summary {
   height: 35px;
 }
 
-.tld-logo {
-  width: 75px; /* Example: Set width */
-  height: auto; /* Maintain aspect ratio */
-  display: block; /* Block-level display */
-  margin: auto; /* Center the image horizontally */
-  margin-top: 10px;
-  border: 2px solid #fff; /* Optional: Add a white border */
-  border-radius: 8px; /* Optional: Rounded corners */
-  box-shadow: 0 4px 6px rgb(0 0 0 / 30%); /* Optional: Add shadow */
-}
-
 /* Menu Items */
 #menu-items {
   position: fixed;

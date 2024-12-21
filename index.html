@@ -10,29 +10,61 @@
     />
     <title>Interactive Map Viewer</title>
     <!-- Link to external CSS -->
-	<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <link
+      rel="stylesheet"
+      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css"
+    />
     <link rel="stylesheet" href="assets/css/styles.css" />
   </head>
   <body>
-  
-  <div id="cog-icon" class="cog-icon">
-    <i class="fas fa-cog"></i>
-  </div>
-  <div id="settings-popup" class="settings-popup">
-    <div class="popup-content">
-      <h2>Difficulty Settings</h2>
-        <div class="difficulty-buttons">
-          <button id="pilgrim" class="active" onclick="setCategory('pilgrim')">
-            Pilgrim / Voyageur / Stalker
-          </button>
-          <button id="interloper" onclick="setCategory('interloper')">
-            Interloper / Misery
-          </button>
-        </div>
-      <h2>Credits</h2>
-      <p>Credits of other websites...</p>
+    <div id="cog-icon" class="cog-icon">
+      <i class="fas fa-cog"></i>
     </div>
-  </div>
+    <div id="settings-popup" class="settings-popup">
+      <div class="popup-content">
+        <div class="difficultys">
+          <h2>Difficulty Settings</h2>
+          <div class="difficulty-buttons">
+            <button
+              id="pilgrim"
+              class="active"
+              onclick="setCategory('pilgrim')"
+            >
+              Pilgrim / Voyageur / Stalker
+            </button>
+            <button id="interloper" onclick="setCategory('interloper')">
+              Interloper / Misery
+            </button>
+          </div>
+        </div>
+        <div class="credits">
+          <h2>Credits</h2>
+          <p>
+            This page uses material from the <br />
+            <a
+              href="https://steamcommunity.com/sharedfiles/filedetails/?id=3255435617"
+              >Updated Region Maps [2024] Steam Guide</a
+            >
+            <br />
+            by the Author
+            <a href="https://steamcommunity.com/profiles/76561198212232496"
+              >HokuOwl</a
+            >
+          </p>
+          <p>
+            This page also uses material from <br />
+            <a href="http://thelongdark.wikia.com/wiki/The_Long_Dark_Wiki"
+              >The Long Dark wiki</a
+            >
+            at <a href="http://www.wikia.com/">Wikia</a> and is licensed under
+            the
+            <a href="http://creativecommons.org/licenses/by-sa/3.0/"
+              >Creative Commons Attribution-Share Alike License</a
+            >.
+          </p>
+        </div>
+      </div>
+    </div>
 
     <div id="start-map-container">
       <img

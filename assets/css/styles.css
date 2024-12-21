@@ -33,7 +33,7 @@ summary {
   z-index: 1000;
 }
 
-.cog-icon i{
+.cog-icon i {
   font-size: 35px;
 }
 
@@ -46,6 +46,7 @@ summary {
   0% {
     transform: rotate(0deg);
   }
+
   100% {
     transform: rotate(360deg);
   }
@@ -57,17 +58,21 @@ summary {
   position: fixed;
   bottom: 100px;
   left: 20px;
-  width: 300px;
+  width: 750px;
   background-color: inherit;
   border: 2px solid #fff; /* Optional: Add a white border */
   border-radius: 8px; /* Optional: Rounded corners */
-  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+  box-shadow: 0 4px 8px rgb(0 0 0 / 10%);
   z-index: 1001;
 }
 
 /* Popup content */
 .popup-content {
   padding: 20px;
+  text-align: center;
+  display: grid;
+  grid-template-columns: 1fr 1fr; /* Two equal-width columns */
+  gap: 10px; /* Optional: space between columns */
 }
 
 .home-button {
@@ -176,7 +181,7 @@ button:focus {
 .difficulty-buttons {
   display: grid;
   justify-content: safe center;
-  margin-top: 20px;
+  margin-top: 30px;
 }
 
 .difficulty-buttons button {
@@ -185,7 +190,7 @@ button:focus {
   cursor: pointer;
   background-color: #222;
   color: white;
-  margin: 0 0 10px;
+  margin: 0 0 20px;
   border: 2px solid #fff; /* Optional: Add a white border */
   border-radius: 8px; /* Optional: Rounded corners */
 }

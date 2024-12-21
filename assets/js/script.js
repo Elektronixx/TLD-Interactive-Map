@@ -291,7 +291,11 @@ document.addEventListener('DOMContentLoaded', () => {
 
   // Close the popup when clicking outside of it
   window.addEventListener('click', (event) => {
-    if (event.target !== settingsPopup && event.target !== cogIconContainer && !settingsPopup.contains(event.target)) {
+    if (
+      event.target !== settingsPopup &&
+      event.target !== cogIconContainer &&
+      !settingsPopup.contains(event.target)
+    ) {
       settingsPopup.style.display = 'none';
       cogIcon.classList.remove('rotate');
     }

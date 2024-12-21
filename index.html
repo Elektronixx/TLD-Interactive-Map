@@ -1,72 +1,257 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
-<head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <link rel="icon" type="image/png" href="https://styles.redditmedia.com/t5_2ygr3/styles/communityIcon_otm5gkx4px121.jpg">
-  <title>Interactive Map Viewer</title>
-  <!-- Link to external CSS -->
-  <link rel="stylesheet" href="assets/css/styles.css">
-</head>
-<body>
-
-  <div id="burger-menu">
-    <button class="burger-icon" id="burger-button" aria-label="Menu">
-	  <div class="line"></div>
-	  <div class="line"></div>
-	  <div class="line"></div>
-	</button>
-    <div id="menu-items">
-	<img src="https://styles.redditmedia.com/t5_2ygr3/styles/communityIcon_otm5gkx4px121.jpg" class="tld-logo" alt="The Long Dark Logo">
-      <div class="difficulty-buttons">
-        <button id="pilgrim" class="active" onclick="setCategory('pilgrim')">Pilgrim / Voyageur / Stalker</button>
-        <button id="interloper" onclick="setCategory('interloper')">Interloper / Misery</button>
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <link
+      rel="icon"
+      type="image/png"
+      href="https://styles.redditmedia.com/t5_2ygr3/styles/communityIcon_otm5gkx4px121.jpg"
+    />
+    <title>Interactive Map Viewer</title>
+    <!-- Link to external CSS -->
+    <link rel="stylesheet" href="assets/css/styles.css" />
+  </head>
+  <body>
+    <div id="burger-menu">
+      <button class="burger-icon" id="burger-button" aria-label="Menu">
+        <div class="line"></div>
+        <div class="line"></div>
+        <div class="line"></div>
+      </button>
+      <div id="menu-items">
+        <img
+          src="https://styles.redditmedia.com/t5_2ygr3/styles/communityIcon_otm5gkx4px121.jpg"
+          class="tld-logo"
+          alt="The Long Dark Logo"
+        />
+        <div class="difficulty-buttons">
+          <button id="pilgrim" class="active" onclick="setCategory('pilgrim')">
+            Pilgrim / Voyageur / Stalker
+          </button>
+          <button id="interloper" onclick="setCategory('interloper')">
+            Interloper / Misery
+          </button>
+        </div>
       </div>
     </div>
-  </div>
 
-	<div id="start-map-container">
-	  <img src="assets/img/homemap.png" alt="Start Map" usemap="#map-links" id="start-map-image" draggable="false">
-	  
-	  <!-- Define clickable areas -->
-	  <map name="map-links">
-		<area id="forlorn-muskeg" alt="Forlorn Muskeg" title="Forlorn Muskeg" href="#" coords="2035,1389,1758,1339" shape="rect" onclick="loadMap('forlorn-muskeg')">
-		<area id="broken-railroad" alt="Broken Railroad" title="Broken Railroad" href="#" coords="1313,1267,1624,1324" shape="rect" onclick="loadMap('broken-railroad')">
-		<area id="mountain-town" alt="Mountain Town" title="Mountain Town" href="#" coords="1596,794,1872,856" shape="rect" onclick="loadMap('mountain-town')">
-		<area id="hushed-river-valley" alt="Hushed River Valley" title="Hushed River Valley" href="#" coords="1410,364,1759,426" shape="rect" onclick="loadMap('hushed-river-valley')">
-		<area id="keepers-pass" alt="Keeper's Pass" title="Keeper's Pass" href="#" coords="2232,573,2475,635" shape="rect" onclick="loadMap('keepers-pass')">
-		<area id="bleak-inlet" alt="Bleak Inlet" title="Bleak Inlet" href="#" coords="2368,1573,2570,1618" shape="rect" onclick="loadMap('bleak-inlet')">
-		<area id="the-ravine" alt="The Ravine" title="The Ravine" href="#" coords="2469,1222,2649,1284" shape="rect" onclick="loadMap('the-ravine')">
-		<area id="winding-river" alt="Winding River" title="Winding River" href="#" coords="2469,1137,2717,1182" shape="rect" onclick="loadMap('winding-river')">
-		<area id="pleasant-valley" alt="Pleasant Valley" title="Pleasant Valley" href="#" coords="2745,743,3021,788" shape="rect" onclick="loadMap('pleasant-valley')">
-		<area id="timberwolf-mountain" alt="Timberwolf Mountain" title="Timberwolf Mountain" href="#" coords="2948,444,3303,483" shape="rect" onclick="loadMap('timberwolf-mountain')">
-		<area id="ash-canyon" alt="Ash Canyon" title="Ash Canyon" href="#" coords="3432,308,3635,348" shape="rect" onclick="loadMap('ash-canyon')">
-		<area id="coastal-highway" alt="Coastal Highway" title="Coastal Highway" href="#" coords="2903,1358,3196,1403" shape="rect" onclick="loadMap('coastal-highway')">
-		<area id="crumbling-highway" alt="Crumbling Highway" title="Crumbling Highway" href="#" coords="3049,1815,3365,1872" shape="rect" onclick="loadMap('crumbling-highway')">
-		<area id="desolation-point" alt="Desolation Point" title="Desolation Point" href="#" coords="3235,1556,3528,1601" shape="rect" onclick="loadMap('desolation-point')">
-		<area id="mystery-lake" alt="Mystery Lake" title="Mystery Lake" href="#" coords="2030,1014,2266,1059" shape="rect" onclick="loadMap('mystery-lake')">
-		<area id="blackrock" alt="Blackrock" title="Blackrock" href="#" coords="2627,212,2818,257" shape="rect" onclick="loadMap('blackrock')">
-		<area id="far-range-branch-line" alt="Far Range Branch Line" title="Far Range Branch Line" href="#" coords="751,1601,1117,1657" shape="rect" onclick="loadMap('far-range-branch-line')">
-		<area id="transfer-pass" alt="Transfer Pass" title="Transfer Pass" href="#" coords="661,1305,914,1350" shape="rect" onclick="loadMap('transfer-pass')">
-		<area id="forsaken-airfield" alt="Forsaken Airfield" title="Forsaken Airfield" href="#" coords="210,1389,514,1434" shape="rect" onclick="loadMap('forsaken-airfield')">
-		<area id="sundered-pass" alt="Sundered Pass" title="Sundered Pass" href="#" coords="599,955,846,1006" shape="rect" onclick="loadMap('sundered-pass')">
-		<area id="zone-of-contamination" alt="Zone of Contamination" title="Zone of Contamination" href="#" coords="824,1186,1083,1260" shape="rect" onclick="loadMap('zone-of-contamination')">
-	  </map>
-	</div>
+    <div id="start-map-container">
+      <img
+        src="assets/img/homemap.png"
+        alt="Start Map"
+        usemap="#map-links"
+        id="start-map-image"
+        draggable="false"
+      />
 
-	<!-- Map Image Wrapper -->
-	<div id="images-wrapper">
-		<div class="image-container" id="map-image">
-			<img src="" alt="Map Image">
-		</div>
-	</div>
-  
-  <!-- Home button at the bottom-right -->
-<button id="homeButton" class="home-button">
-	<img src="assets/img/home.png" alt="Back to Home">
-</button>
+      <!-- Define clickable areas -->
+      <map name="map-links">
+        <area
+          id="forlorn-muskeg"
+          alt="Forlorn Muskeg"
+          title="Forlorn Muskeg"
+          href="#"
+          coords="2035,1389,1758,1339"
+          shape="rect"
+          onclick="loadMap('forlorn-muskeg')"
+        />
+        <area
+          id="broken-railroad"
+          alt="Broken Railroad"
+          title="Broken Railroad"
+          href="#"
+          coords="1313,1267,1624,1324"
+          shape="rect"
+          onclick="loadMap('broken-railroad')"
+        />
+        <area
+          id="mountain-town"
+          alt="Mountain Town"
+          title="Mountain Town"
+          href="#"
+          coords="1596,794,1872,856"
+          shape="rect"
+          onclick="loadMap('mountain-town')"
+        />
+        <area
+          id="hushed-river-valley"
+          alt="Hushed River Valley"
+          title="Hushed River Valley"
+          href="#"
+          coords="1410,364,1759,426"
+          shape="rect"
+          onclick="loadMap('hushed-river-valley')"
+        />
+        <area
+          id="keepers-pass"
+          alt="Keeper's Pass"
+          title="Keeper's Pass"
+          href="#"
+          coords="2232,573,2475,635"
+          shape="rect"
+          onclick="loadMap('keepers-pass')"
+        />
+        <area
+          id="bleak-inlet"
+          alt="Bleak Inlet"
+          title="Bleak Inlet"
+          href="#"
+          coords="2368,1573,2570,1618"
+          shape="rect"
+          onclick="loadMap('bleak-inlet')"
+        />
+        <area
+          id="the-ravine"
+          alt="The Ravine"
+          title="The Ravine"
+          href="#"
+          coords="2469,1222,2649,1284"
+          shape="rect"
+          onclick="loadMap('the-ravine')"
+        />
+        <area
+          id="winding-river"
+          alt="Winding River"
+          title="Winding River"
+          href="#"
+          coords="2469,1137,2717,1182"
+          shape="rect"
+          onclick="loadMap('winding-river')"
+        />
+        <area
+          id="pleasant-valley"
+          alt="Pleasant Valley"
+          title="Pleasant Valley"
+          href="#"
+          coords="2745,743,3021,788"
+          shape="rect"
+          onclick="loadMap('pleasant-valley')"
+        />
+        <area
+          id="timberwolf-mountain"
+          alt="Timberwolf Mountain"
+          title="Timberwolf Mountain"
+          href="#"
+          coords="2948,444,3303,483"
+          shape="rect"
+          onclick="loadMap('timberwolf-mountain')"
+        />
+        <area
+          id="ash-canyon"
+          alt="Ash Canyon"
+          title="Ash Canyon"
+          href="#"
+          coords="3432,308,3635,348"
+          shape="rect"
+          onclick="loadMap('ash-canyon')"
+        />
+        <area
+          id="coastal-highway"
+          alt="Coastal Highway"
+          title="Coastal Highway"
+          href="#"
+          coords="2903,1358,3196,1403"
+          shape="rect"
+          onclick="loadMap('coastal-highway')"
+        />
+        <area
+          id="crumbling-highway"
+          alt="Crumbling Highway"
+          title="Crumbling Highway"
+          href="#"
+          coords="3049,1815,3365,1872"
+          shape="rect"
+          onclick="loadMap('crumbling-highway')"
+        />
+        <area
+          id="desolation-point"
+          alt="Desolation Point"
+          title="Desolation Point"
+          href="#"
+          coords="3235,1556,3528,1601"
+          shape="rect"
+          onclick="loadMap('desolation-point')"
+        />
+        <area
+          id="mystery-lake"
+          alt="Mystery Lake"
+          title="Mystery Lake"
+          href="#"
+          coords="2030,1014,2266,1059"
+          shape="rect"
+          onclick="loadMap('mystery-lake')"
+        />
+        <area
+          id="blackrock"
+          alt="Blackrock"
+          title="Blackrock"
+          href="#"
+          coords="2627,212,2818,257"
+          shape="rect"
+          onclick="loadMap('blackrock')"
+        />
+        <area
+          id="far-range-branch-line"
+          alt="Far Range Branch Line"
+          title="Far Range Branch Line"
+          href="#"
+          coords="751,1601,1117,1657"
+          shape="rect"
+          onclick="loadMap('far-range-branch-line')"
+        />
+        <area
+          id="transfer-pass"
+          alt="Transfer Pass"
+          title="Transfer Pass"
+          href="#"
+          coords="661,1305,914,1350"
+          shape="rect"
+          onclick="loadMap('transfer-pass')"
+        />
+        <area
+          id="forsaken-airfield"
+          alt="Forsaken Airfield"
+          title="Forsaken Airfield"
+          href="#"
+          coords="210,1389,514,1434"
+          shape="rect"
+          onclick="loadMap('forsaken-airfield')"
+        />
+        <area
+          id="sundered-pass"
+          alt="Sundered Pass"
+          title="Sundered Pass"
+          href="#"
+          coords="599,955,846,1006"
+          shape="rect"
+          onclick="loadMap('sundered-pass')"
+        />
+        <area
+          id="zone-of-contamination"
+          alt="Zone of Contamination"
+          title="Zone of Contamination"
+          href="#"
+          coords="824,1186,1083,1260"
+          shape="rect"
+          onclick="loadMap('zone-of-contamination')"
+        />
+      </map>
+    </div>
 
-<!-- Link to external JS -->
-<script src="assets/js/script.js"></script>
-</body>
+    <!-- Map Image Wrapper -->
+    <div id="images-wrapper">
+      <div class="image-container" id="map-image">
+        <img src="#" alt="Map Image" />
+      </div>
+    </div>
+
+    <!-- Home button at the bottom-right -->
+    <button id="homeButton" class="home-button">
+      <img src="assets/img/home.png" alt="Back to Home" />
+    </button>
+
+    <!-- Link to external JS -->
+    <script src="assets/js/script.js"></script>
+  </body>
 </html>

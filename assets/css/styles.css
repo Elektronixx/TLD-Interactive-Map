@@ -264,23 +264,26 @@ button:focus {
   cursor: grabbing;
 }
 
-@keyframes lightAura {
+@keyframes lightaura {
   0% {
-  box-shadow: 0 0 10px rgba(255, 255, 255, 0.5);
-  }
-  50% {
-  box-shadow: 0 0 20px rgba(255, 255, 255, 0.7);
-  }
-  100% {
-  box-shadow: 0 0 10px rgba(255, 255, 255, 0.5);
-  }
+    box-shadow: 0 0 10px rgb(255 255 255 / 50%);
   }
 
-  .highlight-aura {
-  animation: lightAura 2s ease-in-out infinite;
+  50% {
+    box-shadow: 0 0 20px rgb(255 255 255 / 70%);
   }
-  .highlight-overlay {
-      position: absolute;
-      pointer-events: none;
-      border-radius: 5px;
+
+  100% {
+    box-shadow: 0 0 10px rgb(255 255 255 / 50%);
   }
+}
+
+.highlight-aura {
+  animation: lightaura 2s ease-in-out infinite;
+}
+
+.highlight-overlay {
+  position: absolute;
+  pointer-events: none;
+  border-radius: 5px;
+}

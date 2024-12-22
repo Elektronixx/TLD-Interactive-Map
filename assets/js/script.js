@@ -300,13 +300,13 @@ document.addEventListener('DOMContentLoaded', () => {
       cogIcon.classList.remove('rotate');
     }
   });
-  
+
   // Set a delay of 2 seconds (2000 milliseconds) before running the highlight animation
   setTimeout(() => {
     const overlayContainer = document.getElementById('overlay-container');
     const areaElements = document.querySelectorAll('area');
 
-    areaElements.forEach(el => {
+    areaElements.forEach((el) => {
       // Check if coords attribute exists
       if (el.coords) {
         const coords = el.coords.split(',').map(Number);
@@ -326,10 +326,8 @@ document.addEventListener('DOMContentLoaded', () => {
     // Remove the overlays after the animation duration (3 seconds)
     setTimeout(() => {
       const overlays = document.querySelectorAll('.highlight-overlay');
-      overlays.forEach(el => el.remove());
+      overlays.forEach((el) => el.remove());
       console.log('Highlight overlays removed'); // Debugging output
     }, 2000); // Duration of the highlight in milliseconds
-
   }, 1000); // Delay of 2 seconds before running the function
-  
 });

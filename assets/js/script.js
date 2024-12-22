@@ -219,6 +219,8 @@ document.querySelectorAll('.difficulty-buttons button').forEach((button) => {
 
 // Function to load and display the selected map and difficulty
 function loadMap(mapId) {
+  const overlays = document.querySelectorAll('.highlight-overlay');
+  overlays.forEach(el => el.remove());
   showMap(mapId);
   document.getElementById('start-map-image').style.display = 'none'; // Hide the start page
   document.querySelector('#images-wrapper').style.display = 'block'; // Ensure the image wrapper is visible

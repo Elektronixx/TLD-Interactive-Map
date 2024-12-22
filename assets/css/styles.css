@@ -263,3 +263,24 @@ button:focus {
 .image-container img.dragging {
   cursor: grabbing;
 }
+
+@keyframes lightAura {
+  0% {
+  box-shadow: 0 0 10px rgba(255, 255, 255, 0.5);
+  }
+  50% {
+  box-shadow: 0 0 20px rgba(255, 255, 255, 0.7);
+  }
+  100% {
+  box-shadow: 0 0 10px rgba(255, 255, 255, 0.5);
+  }
+  }
+
+  .highlight-aura {
+  animation: lightAura 2s ease-in-out infinite;
+  }
+  .highlight-overlay {
+      position: absolute;
+      pointer-events: none;
+      border-radius: 5px;
+  }

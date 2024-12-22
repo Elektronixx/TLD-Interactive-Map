@@ -328,6 +328,6 @@ document.addEventListener('DOMContentLoaded', () => {
       const overlays = document.querySelectorAll('.highlight-overlay');
       overlays.forEach((el) => el.remove());
       console.log('Highlight overlays removed'); // Debugging output
-    }, 2000); // Duration of the highlight in milliseconds
+    }, 5000); // Duration of the highlight in milliseconds
   }, 1000); // Delay of 2 seconds before running the function
 });

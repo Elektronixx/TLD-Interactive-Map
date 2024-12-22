@@ -124,7 +124,7 @@ const maps = {
   },
   'zone-of-contamination': {
     pilgrim:
-      'https://steamuserimages-a.akamaihd.net/ugc/37814745481297380/BC0F009376B5F60EB884E903629FC6DCBC43A9A2/',
+      'https://steamuserimages-a.akamaihd.net/ugc/37814745485571463/F2917A701683BAE4EB468B5452D940AC977B94CA/',
     interloper:
       'https://steamuserimages-a.akamaihd.net/ugc/37814745485571671/C6D652B001FDB57F28C1AE94175A12FD564C4AC6/',
   },

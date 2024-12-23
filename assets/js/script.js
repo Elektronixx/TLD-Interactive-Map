@@ -325,7 +325,6 @@ document.addEventListener('DOMContentLoaded', () => {
         overlay.style.width = `${coords[2] - coords[0]}px`;
         overlay.style.height = `${coords[3] - coords[1]}px`;
         overlayContainer.appendChild(overlay);
-        console.log('Overlay created for area:', coords); // Debugging output
       } else {
         console.error('coords attribute missing for element:', el); // Error handling
       }

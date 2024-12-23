@@ -128,6 +128,12 @@ const maps = {
     interloper:
       'https://steamuserimages-a.akamaihd.net/ugc/37814745485571671/C6D652B001FDB57F28C1AE94175A12FD564C4AC6/',
   },
+  'tftft-transitional-cave': {
+    pilgrim:
+      'https://steamuserimages-a.akamaihd.net/ugc/2529416016912058547/B3B1BC18D40080358198B357C1F717A612BDC794/',
+    interloper:
+      'https://steamuserimages-a.akamaihd.net/ugc/2529416016912058547/B3B1BC18D40080358198B357C1F717A612BDC794/',
+  },
 };
 
 // Function to toggle the difficulty category
@@ -197,7 +203,7 @@ document.querySelectorAll('.image-container').forEach((map) => {
     } else {
       zoomLevel -= 0.1;
     }
-    zoomLevel = Math.min(Math.max(zoomLevel, 0.5), 3); // Limit zoom level
+    zoomLevel = Math.min(Math.max(zoomLevel, 0.5), 5); // Limit zoom level
     img.style.transform = `scale(${zoomLevel})`;
     e.preventDefault();
   });
@@ -220,7 +226,7 @@ document.querySelectorAll('.difficulty-buttons button').forEach((button) => {
 // Function to load and display the selected map and difficulty
 function loadMap(mapId) {
   const overlays = document.querySelectorAll('.highlight-overlay');
-  overlays.forEach(el => el.remove());
+  overlays.forEach((el) => el.remove());
   showMap(mapId);
   document.getElementById('start-map-image').style.display = 'none'; // Hide the start page
   document.querySelector('#images-wrapper').style.display = 'block'; // Ensure the image wrapper is visible

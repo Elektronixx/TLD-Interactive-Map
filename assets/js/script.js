@@ -134,6 +134,12 @@ const maps = {
     interloper:
       'https://steamuserimages-a.akamaihd.net/ugc/2529416016912058547/B3B1BC18D40080358198B357C1F717A612BDC794/',
   },
+   'tftft-langston-mine': {
+    pilgrim:
+      'https://steamuserimages-a.akamaihd.net/ugc/2298590116010964948/CD7B37AC9443188805A8F319C7F6808109379138/',
+    interloper:
+      'https://steamuserimages-a.akamaihd.net/ugc/2298590116010964948/CD7B37AC9443188805A8F319C7F6808109379138/',
+  },
 };
 
 // Function to toggle the difficulty category

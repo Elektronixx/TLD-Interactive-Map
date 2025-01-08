@@ -20,9 +20,11 @@ jobs:
 
     - name: Install dependencies
       run: npm install
+      working-directory: assets/js
 
     - name: Run update script
       run: node update-maps.js
+      working-directory: assets/js
 
     - name: Commit and push changes
       run: |

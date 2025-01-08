@@ -14,7 +14,6 @@ const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
 async function fetchAndParse(url) {
-  console.log(`Fetching URL: ${url}`);
   const response = await fetch(url);
   const body = await response.text();
   return cheerio.load(body);
@@ -72,8 +71,10 @@ async function updateMaps() {
       });
     }
 
-    fs.writeFileSync(path.join(__dirname, 'maps.json'), JSON.stringify(maps, null, 2));
-    console.log('maps.json has been updated');
+    // Save maps.json in the assets/js directory
+    const outputFilePath = path.join(__dirname, 'maps.json');
+    fs.writeFileSync(outputFilePath, JSON.stringify(maps, null, 2));
+    console.log(`maps.json has been updated at ${outputFilePath}`);
   } catch (error) {
     console.error('Error fetching or processing data:', error);
     process.exit(1); // Ensure the script exits with code 1 on error

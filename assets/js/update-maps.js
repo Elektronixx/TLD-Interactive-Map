@@ -14,6 +14,7 @@ const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
 async function fetchAndParse(url) {
+  console.log(`Fetching URL: ${url}`);
   const response = await fetch(url);
   const body = await response.text();
   return cheerio.load(body);
@@ -27,6 +28,7 @@ async function updateMaps() {
       const $ = await fetchAndParse(url);
 
       const detailBoxes = $('.subSection.detailBox');
+      console.log(`Found ${detailBoxes.length} detail boxes.`);
 
       detailBoxes.each((i, box) => {
         const mapNameDiv = $(box).find('.subSectionTitle');
@@ -40,10 +42,11 @@ async function updateMaps() {
 
         // Remove the "-map" suffix
         mapName = mapName.replace(/-map$/, '');
-		
+
         // Remove the apostrophe (') character
         mapName = mapName.replace(/'/g, '');
-		
+
+        console.log(`Processing map: ${mapName}`);
 
         if (mapName) {
           const links = $(box).find('a.modalContentLink');
@@ -73,6 +76,7 @@ async function updateMaps() {
     console.log('maps.json has been updated');
   } catch (error) {
     console.error('Error fetching or processing data:', error);
+    process.exit(1); // Ensure the script exits with code 1 on error
   }
 }
 

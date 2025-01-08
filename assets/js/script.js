@@ -118,9 +118,9 @@ const maps = {
   },
   'sundered-pass': {
     pilgrim:
-      'https://steamuserimages-a.akamaihd.net/ugc/37814745481293800/B618B2F10F9E696C9C9E97DD038F0B75C6ECC331/',
+      'https://steamuserimages-a.akamaihd.net/ugc/37816655293801691/EF477D9509D89A9C568AFC13BA0190285AE14524/',
     interloper:
-      'https://steamuserimages-a.akamaihd.net/ugc/37814745481294355/36AAC75152B0D618BE009C5AFD7FDBCD37CA17BD/',
+      'https://steamuserimages-a.akamaihd.net/ugc/37816655293802328/AB55DA4FD51604486E0747D7D79B2E20E34163EF/',
   },
   'zone-of-contamination': {
     pilgrim:

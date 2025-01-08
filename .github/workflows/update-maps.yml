@@ -33,11 +33,9 @@ jobs:
         git config --global user.email 'github-actions@github.com'
         git status
         if [[ -n $(git status -s) ]]; then
-          echo "changes detected"
-          echo "true" > has_changes.txt
+          echo "::set-output name=has_changes::true"
         else
-          echo "no changes detected"
-          echo "false" > has_changes.txt
+          echo "::set-output name=has_changes::false"
         fi
       working-directory: assets/js
 

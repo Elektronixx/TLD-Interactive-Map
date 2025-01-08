@@ -26,13 +26,27 @@ jobs:
       run: node update-maps.js
       working-directory: assets/js
 
-    - name: Commit and push changes
+    - name: Check for changes
+      id: git-status
       run: |
         git config --global user.name 'github-actions'
         git config --global user.email 'github-actions@github.com'
+        git status
+        if [[ -n $(git status -s) ]]; then
+          echo "changes detected"
+          echo "true" > has_changes.txt
+        else
+          echo "no changes detected"
+          echo "false" > has_changes.txt
+        fi
+      working-directory: assets/js
+
+    - name: Commit and push updated maps.json
+      if: steps.git-status.outputs.has_changes == 'true'
+      run: |
         git add maps.json
         git commit -m 'Update maps.json'
         git push
-        working-directory: assets/js
+      working-directory: assets/js
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

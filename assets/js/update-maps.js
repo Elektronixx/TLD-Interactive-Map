@@ -40,6 +40,10 @@ async function updateMaps() {
 
         // Remove the "-map" suffix
         mapName = mapName.replace(/-map$/, '');
+		
+        // Remove the apostrophe (') character
+        mapName = mapName.replace(/'/g, '');
+		
 
         if (mapName) {
           const links = $(box).find('a.modalContentLink');

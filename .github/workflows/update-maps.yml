@@ -33,5 +33,6 @@ jobs:
         git add maps.json
         git commit -m 'Update maps.json'
         git push
+        working-directory: assets/js
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

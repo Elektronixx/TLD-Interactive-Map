@@ -19,6 +19,11 @@
     "stylelint-config-standard": "^36.0.1",
     "stylelint-config-standard-scss": "^14.0.0"
   },
+  "scripts": {
+    "lint:js": "eslint .",
+    "lint:css": "stylelint '**/*.css'",
+    "format": "prettier --write ."
+  },
   "dependencies": {
     "cheerio": "^1.0.0",
     "node-fetch": "^3.3.2"

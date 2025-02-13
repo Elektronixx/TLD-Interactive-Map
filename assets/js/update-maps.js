@@ -66,8 +66,6 @@ async function updateMaps() {
               pilgrim: mapLinks[0],
               interloper: mapLinks[1]
             };
-          } else {
-            throw new Error('Unable to get Link from Map: ${mapName}.');
           }
         }
       });
@@ -78,7 +76,7 @@ async function updateMaps() {
     fs.writeFileSync(outputFilePath, JSON.stringify(maps, null, 2));
     console.log(`maps.json has been updated at ${outputFilePath}`);
   } catch (error) {
-    console.error('Error fetching or processing data:', error.message);
+    console.error('Error fetching or processing data:', error);
     process.exit(1); // Ensure the script exits with code 1 on error
   }
 }

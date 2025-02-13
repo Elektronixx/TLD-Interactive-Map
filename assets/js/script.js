@@ -7,14 +7,14 @@ let maps = {
 
 // Function to update the maps object from maps.json
 async function updateMaps() {
-	try {
-		const response = await fetch('assets/js/maps.json'); // Update the path to your maps.json file
-		const mapsData = await response.json();
-		maps = mapsData;
-		console.log('Maps data updated:', maps);
-	} catch (error) {
-		console.error('Error fetching or processing maps.json:', error);
-	}
+  try {
+    const response = await fetch('assets/js/maps.json'); // Update the path to your maps.json file
+    const mapsData = await response.json();
+    maps = mapsData;
+    console.log('Maps data updated:', maps);
+  } catch (error) {
+    console.error('Error fetching or processing maps.json:', error);
+  }
 }
 
 // Function to toggle the difficulty category
@@ -139,8 +139,8 @@ function scaleMapAreas() {
 
 // Call scaling function on load and resize
 window.addEventListener('load', () => {
-    scaleMapAreas();
-    updateMaps(); // Update maps data on page load
+  scaleMapAreas();
+  updateMaps(); // Update maps data on page load
 });
 window.addEventListener('resize', scaleMapAreas);
 

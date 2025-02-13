@@ -1,12 +1,12 @@
-import fetch from "node-fetch";
+import fetch from 'node-fetch';
 import * as cheerio from 'cheerio';
-import fs from "fs";
-import path from "path";
+import fs from 'fs';
+import path from 'path';
 import { fileURLToPath } from 'url';
 
 const urls = [
   'https://steamcommunity.com/sharedfiles/filedetails/?id=3255435617',
-  'https://steamcommunity.com/sharedfiles/filedetails/?id=2899955301'
+  'https://steamcommunity.com/sharedfiles/filedetails/?id=2899955301',
 ];
 
 // Get the current file name and directory name
@@ -31,7 +31,11 @@ async function updateMaps() {
 
       detailBoxes.each((i, box) => {
         const mapNameDiv = $(box).find('.subSectionTitle');
-        let mapName = mapNameDiv.text().trim().toLowerCase().replace(/\s+/g, '-');
+        let mapName = mapNameDiv
+          .text()
+          .trim()
+          .toLowerCase()
+          .replace(/\s+/g, '-');
 
         // Trim the "-vX.XX" suffix
         mapName = mapName.replace(/-v\d+\.\d+$/, '');
@@ -55,16 +59,22 @@ async function updateMaps() {
             const url = $(link).attr('href');
             mapLinks.push(url);
           });
-
+          console.log(`Processing mapLink: ${mapLinks}`);
           if (mapLinks.length === 1) {
+            if (mapLinks[0] === '') {
+              throw new Error(`Unable to get Link from Map: ${mapName}`);
+            }
             maps[mapName] = {
               pilgrim: mapLinks[0],
-              interloper: mapLinks[0]
+              interloper: mapLinks[0],
             };
           } else if (mapLinks.length >= 2) {
+            if (mapLinks[0] === '' || mapLinks[1] === '') {
+              throw new Error(`Unable to get Link from Map: ${mapName}`);
+            }
             maps[mapName] = {
               pilgrim: mapLinks[0],
-              interloper: mapLinks[1]
+              interloper: mapLinks[1],
             };
           }
         }

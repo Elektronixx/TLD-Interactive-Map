@@ -10,41 +10,41 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-    - name: Checkout repository
-      uses: actions/checkout@v2
+      - name: Checkout repository
+        uses: actions/checkout@v2
 
-    - name: Set up Node.js
-      uses: actions/setup-node@v3
-      with:
-        node-version: '22'
+      - name: Set up Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: '22'
 
-    - name: Install dependencies
-      run: npm install
-      working-directory: assets/js
+      - name: Install dependencies
+        run: npm install
+        working-directory: assets/js
 
-    - name: Run update script
-      run: node update-maps.js
-      working-directory: assets/js
+      - name: Run update script
+        run: node update-maps.js
+        working-directory: assets/js
 
-    - name: Check for changes
-      id: git-status
-      run: |
-        git config --global user.name 'github-actions'
-        git config --global user.email 'github-actions@github.com'
-        git status
-        if [[ -n $(git status -s) ]]; then
-          echo "::set-output name=has_changes::true"
-        else
-          echo "::set-output name=has_changes::false"
-        fi
-      working-directory: assets/js
+      - name: Check for changes
+        id: git-status
+        run: |
+          git config --global user.name 'github-actions'
+          git config --global user.email 'github-actions@github.com'
+          git status
+          if [[ -n $(git status -s) ]]; then
+            echo "::set-output name=has_changes::true"
+          else
+            echo "::set-output name=has_changes::false"
+          fi
+        working-directory: assets/js
 
-    - name: Commit and push updated maps.json
-      if: steps.git-status.outputs.has_changes == 'true'
-      run: |
-        git add maps.json
-        git commit -m 'Update maps.json'
-        git push
-      working-directory: assets/js
-      env:
-        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      - name: Commit and push updated maps.json
+        if: steps.git-status.outputs.has_changes == 'true'
+        run: |
+          git add maps.json
+          git commit -m 'Update maps.json'
+          git push
+        working-directory: assets/js
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

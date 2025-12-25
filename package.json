@@ -2,9 +2,13 @@
   "name": "elektronixx.github.io",
   "version": "1.0.0",
   "description": "An Interactive Map to View all Maps of the Game \"The Long Dark\"",
+  "type": "module",
   "main": "index.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "lint:js": "eslint .",
+    "lint:css": "stylelint '**/*.css'",
+    "format": "prettier --write ."
   },
   "keywords": [],
   "author": "",
@@ -18,11 +22,6 @@
     "stylelint": "^16.12.0",
     "stylelint-config-standard": "^36.0.1",
     "stylelint-config-standard-scss": "^14.0.0"
-  },
-  "scripts": {
-    "lint:js": "eslint .",
-    "lint:css": "stylelint '**/*.css'",
-    "format": "prettier --write ."
   },
   "dependencies": {
     "cheerio": "^1.0.0",

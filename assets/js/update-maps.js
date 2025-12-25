@@ -3,14 +3,13 @@ import * as cheerio from 'cheerio';
 import fs from 'fs/promises';
 import path from 'path';
 import { fileURLToPath } from 'url';
-import { AbortController } from 'abort-controller';
 
 /*
   Improvements made:
   - Uses a browser-like User-Agent to avoid some basic bot blocking.
   - Handles non-200 responses and per-URL errors without aborting the whole run.
   - Saves a debug HTML snapshot per source URL when things go wrong (debug-<idx>.html).
-  - Adds a fetch timeout to avoid hanging.
+  - Adds a fetch timeout to avoid hanging (uses global AbortController).
   - Filters out empty/malformed hrefs and normalizes map names more robustly.
   - Writes maps.json only if at least one map was found; exits non-zero otherwise.
   - Uses fs/promises and await consistently.

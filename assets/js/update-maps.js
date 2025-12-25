@@ -5,13 +5,17 @@ import path from 'path';
 import { fileURLToPath } from 'url';
 
 /*
-  Fixes & improvements:
-  - Do not reference $ in the catch path (avoid ReferenceError).
-  - Use a retry loop with exponential backoff for transient network/timeout failures.
-  - Increased timeout default to 30s and allow up to 3 attempts.
-  - Only save debug snapshot if we actually received a body.
-  - Clearer error messages including err.name and err.message.
-  - Continue to try other URLs if one fails.
+  Strategy:
+  1) For each Steam Workshop URL, extract the numeric published file id.
+  2) Query the Steam API (ISteamRemoteStorage/GetPublishedFileDetails) for structured data.
+     - If the API returns useful links (file_url, preview_url, or links inside the description),
+       use those links to build the map entry (prefer API).
+  3) If the API call fails or doesn't provide sufficient links, fall back to HTML scraping
+     of the Workshop page (cheerio) — the fallback preserves the earlier scraping logic.
+  4) Save debug snapshots:
+     - debug-api-<id>.json for API response
+     - debug-page-<idx>.html for scraped HTML when used or saved for inspection
+  5) Write assets/js/maps.json if any maps were discovered; otherwise exit non-zero so CI can fail and you can inspect debug snapshots.
 */
 
 const urls = [
@@ -25,11 +29,19 @@ const __dirname = path.dirname(__filename);
 const USER_AGENT =
   'Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120 Safari/537.36';
 
+async function safeJsonWrite(filePath, obj) {
+  try {
+    await fs.writeFile(filePath, JSON.stringify(obj, null, 2), 'utf8');
+    console.log(`Saved JSON debug file: ${filePath}`);
+  } catch (err) {
+    console.warn('Failed saving JSON debug file:', err && err.message ? err.message : err);
+  }
+}
+
 async function fetchWithTimeout(url, timeoutMs = 30000, signal = null) {
   const controller = new AbortController();
   const combinedSignal = signal ?? controller.signal;
   const id = setTimeout(() => controller.abort(), timeoutMs);
-
   try {
     const res = await fetch(url, {
       method: 'GET',
@@ -46,61 +58,91 @@ async function fetchWithTimeout(url, timeoutMs = 30000, signal = null) {
 }
 
 async function fetchWithRetries(url, attempts = 3, timeoutMs = 30000) {
-  let attempt = 0;
   let lastError = null;
-
-  while (attempt < attempts) {
-    attempt += 1;
+  for (let attempt = 1; attempt <= attempts; attempt++) {
     try {
-      console.log(`Attempt ${attempt} fetching ${url} (timeout ${timeoutMs}ms)`);
+      console.log(`Attempt ${attempt} fetching ${url}`);
       const res = await fetchWithTimeout(url, timeoutMs);
-      // Treat non-2xx/3xx as a valid response but log it; caller can decide what to do.
       return res;
     } catch (err) {
       lastError = err;
-      const name = err && err.name ? err.name : 'Error';
-      const msg = err && err.message ? err.message : String(err);
-      console.warn(`Fetch attempt ${attempt} failed for ${url}: ${name} - ${msg}`);
-      // exponential backoff before next attempt (base 500ms)
+      console.warn(`Fetch attempt ${attempt} failed for ${url}: ${err?.name ?? 'Error'} - ${err?.message ?? String(err)}`);
       if (attempt < attempts) {
         const backoff = 500 * Math.pow(2, attempt - 1);
-        console.log(`Waiting ${backoff}ms before retrying...`);
         await new Promise((r) => setTimeout(r, backoff));
       }
     }
   }
-
-  // All attempts failed
   const err = new Error(`All ${attempts} fetch attempts failed for ${url}: ${lastError?.message ?? String(lastError)}`);
   err.cause = lastError;
   throw err;
 }
 
-async function fetchAndParse(url, idx) {
+/* Steam API call to get published file details */
+async function getPublishedFileDetails(publishedFileId) {
+  const apiUrl = 'https://api.steampowered.com/ISteamRemoteStorage/GetPublishedFileDetails/v1/';
+  const params = new URLSearchParams();
+  params.append('itemcount', '1');
+  params.append('publishedfileids[0]', String(publishedFileId));
+
+  const res = await fetchWithRetries(apiUrl, 3, 20000).catch((err) => {
+    throw new Error(`Steam API fetch failed: ${err.message}`);
+  });
+
+  if (!res.ok) {
+    throw new Error(`Steam API returned ${res.status} ${res.statusText}`);
+  }
+
+  const json = await res.json();
+  // Save API debug response
+  await safeJsonWrite(path.join(__dirname, `debug-api-${publishedFileId}.json`), json);
+  const details = json?.response?.publishedfiledetails?.[0] ?? null;
+  return details;
+}
+
+/* Extract possible links from API details: file_url, preview_url, links inside description */
+function extractLinksFromDetails(details) {
+  const links = [];
+
+  if (!details) return links;
+
+  if (details.file_url && typeof details.file_url === 'string') links.push(details.file_url);
+  if (details.preview_url && typeof details.preview_url === 'string') links.push(details.preview_url);
+
+  if (details.description && typeof details.description === 'string') {
+    // parse anchors in description HTML to find additional links
+    const $ = cheerio.load(details.description);
+    $('a[href]').each((_, a) => {
+      const href = $(a).attr('href') ?? '';
+      const trimmed = href.trim();
+      if (trimmed) links.push(trimmed);
+    });
+  }
+
+  // Filter duplicates while preserving order
+  return Array.from(new Set(links));
+}
+
+/* Scrape the actual workshop page and return cheerio root and saved debug snapshot */
+async function fetchAndParsePage(url, idx) {
   try {
-    console.log(`Fetching: ${url}`);
     const res = await fetchWithRetries(url, 3, 30000);
     console.log(`Status for ${url}: ${res.status}`);
     const body = await res.text();
-
     if (body && body.length > 0) {
+      const debugPath = path.join(__dirname, `debug-page-${idx}.html`);
       try {
-        const debugPath = path.join(__dirname, `debug-page-${idx}.html`);
         await fs.writeFile(debugPath, body, 'utf8');
         console.log(`Saved debug snapshot to ${debugPath}`);
       } catch (err) {
         console.warn('Failed to write debug snapshot:', err && err.message ? err.message : err);
       }
-    } else {
-      console.warn(`Received empty body from ${url}`);
     }
-
     const $ = cheerio.load(body || '');
     return { $, status: res.status, html: body };
   } catch (err) {
-    console.error(`Fetch/parse failed for ${url}:`, err && err.message ? `${err.name}: ${err.message}` : err);
-    // Return a well-formed object with $ null so callers don't ReferenceError
-    return { $: null, status: null, html: null, error: err };
+    console.warn(`Page fetch/parse failed for ${url}: ${err?.message ?? err}`);
+    return { $, status: null, html: null, error: err };
   }
 }
 
@@ -126,18 +168,77 @@ async function updateMaps() {
 
   for (let i = 0; i < urls.length; i++) {
     const url = urls[i];
+    console.log('Processing source URL:', url);
+
+    // extract publishedfileid
+    let publishedFileId = null;
     try {
-      const { $, status, html, error } = await fetchAndParse(url, i);
-      if (error) {
-        console.warn(`Skipping URL due to fetch/parse error: ${url}`);
-        continue;
+      const u = new URL(url);
+      publishedFileId = u.searchParams.get('id') || null;
+    } catch (err) {
+      console.warn('Invalid URL, skipping:', url);
+      continue;
+    }
+
+    // 1) Try Steam API first
+    let linksFromApi = [];
+    try {
+      if (publishedFileId) {
+        const details = await getPublishedFileDetails(publishedFileId);
+        if (details) {
+          linksFromApi = extractLinksFromDetails(details);
+          console.log(`API links for ${publishedFileId}:`, linksFromApi);
+        } else {
+          console.log(`No details returned by API for ${publishedFileId}`);
+        }
       }
-      if (!status || status >= 400) {
-        console.warn(`Skipping URL due to HTTP status ${status}: ${url}`);
-        continue;
+    } catch (err) {
+      console.warn(`Steam API call failed for id ${publishedFileId}:`, err && err.message ? err.message : err);
+    }
+
+    // If API provided at least one link, parse details.title to get mapName and use API links
+    if (linksFromApi.length > 0) {
+      try {
+        // Use the API-provided title if possible to name the map
+        const apiDebugPath = path.join(__dirname, `debug-api-${publishedFileId}.json`);
+        let title = '';
+        try {
+          const apiJsonRaw = await fs.readFile(apiDebugPath, 'utf8').catch(() => null);
+          if (apiJsonRaw) {
+            const json = JSON.parse(apiJsonRaw);
+            title = json?.response?.publishedfiledetails?.[0]?.title ?? '';
+          }
+        } catch {
+          title = '';
+        }
+
+        if (!title) {
+          // fallback: derive a name from the steam url or id
+          title = `map-${publishedFileId}`;
+        }
+        const mapName = normalizeMapName(title);
+
+        // Use API links (may be 1 or more). If only one, use same link for pilgrim & interloper.
+        const uniqueLinks = Array.from(new Set(linksFromApi));
+        if (uniqueLinks.length === 1) {
+          maps[mapName] = { pilgrim: uniqueLinks[0], interloper: uniqueLinks[0] };
+        } else {
+          maps[mapName] = { pilgrim: uniqueLinks[0], interloper: uniqueLinks[1] || uniqueLinks[0] };
+        }
+        anyUrlSucceeded = true;
+        console.log(`Added map "${mapName}" from API links`);
+        continue; // proceed to next URL
+      } catch (err) {
+        console.warn('Error processing API-provided links, falling back to scraping:', err && err.message ? err.message : err);
+        // fallthrough to scraping
       }
-      if (!$) {
-        console.warn(`No parsed DOM for ${url}, skipping.`);
+    }
+
+    // 2) Fallback: scrape the Workshop page using cheerio
+    try {
+      const { $, status, html, error } = await fetchAndParsePage(url, i);
+      if (error || !status || status >= 400) {
+        console.warn(`Skipping URL due to fetch/parse issues or HTTP status ${status}: ${url}`);
         continue;
       }
 
@@ -145,7 +246,7 @@ async function updateMaps() {
       console.log(`Found ${detailBoxes.length} detail boxes for ${url}.`);
 
       if (!detailBoxes || detailBoxes.length === 0) {
-        console.warn(`No detail boxes found at ${url} — check debug-page-${i}.html.`);
+        console.warn(`No detail boxes found at ${url} — check debug snapshot debug-page-${i}.html.`);
         continue;
       }
 
@@ -155,7 +256,6 @@ async function updateMaps() {
           const mapNameDiv = $box('.subSectionTitle').first();
           let mapName = mapNameDiv.text();
           mapName = normalizeMapName(mapName);
-
           if (!mapName) {
             console.warn('Skipping a detailBox because mapName normalized to empty string.');
             return;
@@ -170,7 +270,7 @@ async function updateMaps() {
           });
 
           const uniqueLinks = Array.from(new Set(mapLinks));
-          console.log(`Map "${mapName}" links found:`, uniqueLinks);
+          console.log(`Map "${mapName}" links found (scrape):`, uniqueLinks);
 
           if (uniqueLinks.length === 0) {
             console.warn(`No links found for map "${mapName}", skipping.`);
@@ -178,30 +278,25 @@ async function updateMaps() {
           }
 
           if (uniqueLinks.length === 1) {
-            maps[mapName] = {
-              pilgrim: uniqueLinks[0],
-              interloper: uniqueLinks[0],
-            };
+            maps[mapName] = { pilgrim: uniqueLinks[0], interloper: uniqueLinks[0] };
           } else {
-            maps[mapName] = {
-              pilgrim: uniqueLinks[0] || '',
-              interloper: uniqueLinks[1] || uniqueLinks[0] || '',
-            };
+            maps[mapName] = { pilgrim: uniqueLinks[0], interloper: uniqueLinks[1] || uniqueLinks[0] };
           }
 
           anyUrlSucceeded = true;
         } catch (err) {
-          console.warn('Error processing a detailBox, continuing with others:', err && err.message ? err.message : err);
+          console.warn('Error processing a detailBox in scraping fallback, continuing:', err && err.message ? err.message : err);
         }
       });
     } catch (err) {
-      console.error(`Unexpected error processing URL ${url}:`, err && err.message ? err.message : err);
+      console.error(`Unexpected error during scraping fallback for ${url}:`, err && err.message ? err.message : err);
+      // continue to next URL
     }
-  }
+  } // end for each url
 
   try {
     if (!anyUrlSucceeded || Object.keys(maps).length === 0) {
-      console.error('No maps were found from any source URLs. Check debug-page-*.html snapshots for details.');
+      console.error('No maps were found from any source URLs. Check debug-api-*.json and debug-page-*.html snapshots for details.');
       process.exit(1);
     }
 

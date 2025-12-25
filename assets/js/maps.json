@@ -90,33 +90,5 @@
   "far-range-branch-line": {
     "pilgrim": "https://images.steamusercontent.com/ugc/12967305776514005370/390463FA1E9F539BCB876BF25E3065276D75DED2/",
     "interloper": "https://images.steamusercontent.com/ugc/10893453294679762817/2CC6706F93D63DD60EF48511CB98A2B27EF149A9/"
-  },
-  "sundered-pass-map-locations": {
-    "pilgrim": "https://images.steamusercontent.com/ugc/2529416016862700218/23A7AD6BDB15D49EE3A76ED523EEC0C489D13C5A/",
-    "interloper": "https://images.steamusercontent.com/ugc/2529416016862700218/23A7AD6BDB15D49EE3A76ED523EEC0C489D13C5A/"
-  },
-  "zone-of-contamination-map-locations": {
-    "pilgrim": "https://images.steamusercontent.com/ugc/2529416016862700224/A557E4A1071DBF4F70F820432CFEB8DF4C705F3C/",
-    "interloper": "https://images.steamusercontent.com/ugc/2529416016862700224/A557E4A1071DBF4F70F820432CFEB8DF4C705F3C/"
-  },
-  "forsaken-airfield-map-locations": {
-    "pilgrim": "https://images.steamusercontent.com/ugc/2529416016862700230/79EE3EFE968195336A4283C50A41E9B3C35FFB65/",
-    "interloper": "https://images.steamusercontent.com/ugc/2529416016862700230/79EE3EFE968195336A4283C50A41E9B3C35FFB65/"
-  },
-  "langston-mine": {
-    "pilgrim": "https://images.steamusercontent.com/ugc/2298590116010964948/CD7B37AC9443188805A8F319C7F6808109379138/",
-    "interloper": "https://images.steamusercontent.com/ugc/2298590116010964948/CD7B37AC9443188805A8F319C7F6808109379138/"
-  },
-  "transition-cave": {
-    "pilgrim": "https://images.steamusercontent.com/ugc/2529416016912058547/B3B1BC18D40080358198B357C1F717A612BDC794/",
-    "interloper": "https://images.steamusercontent.com/ugc/2529416016912058547/B3B1BC18D40080358198B357C1F717A612BDC794/"
-  },
-  "game-world": {
-    "pilgrim": "https://images.steamusercontent.com/ugc/2529416016869898493/0B8CEF42FE9254ECAD1361CD8AB2C4781763D7A9/",
-    "interloper": "https://images.steamusercontent.com/ugc/2529416016869898493/0B8CEF42FE9254ECAD1361CD8AB2C4781763D7A9/"
-  },
-  "connections-between-regions": {
-    "pilgrim": "https://images.steamusercontent.com/ugc/13036389424810677653/1424E21B04EADA5BE64A48B12FD4AB6C29FC76B4/",
-    "interloper": "https://images.steamusercontent.com/ugc/13036389424810677653/1424E21B04EADA5BE64A48B12FD4AB6C29FC76B4/"
   }
 }

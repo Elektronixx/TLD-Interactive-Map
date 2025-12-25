@@ -27,7 +27,6 @@ jobs:
         with:
           node-version: 22
           cache: 'npm'
-          cache-dependency-path: assets/js/package-lock.json
 
       - name: Install dependencies
         working-directory: assets/js

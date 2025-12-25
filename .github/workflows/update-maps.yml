@@ -2,8 +2,15 @@ name: Update Maps
 
 on:
   schedule:
-    - cron: '0 0 * * *' # Runs every day at midnight UTC
-  workflow_dispatch: # Allows manual triggering of the workflow
+    - cron: '0 0 * * *' # Daily at midnight UTC
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: update-maps
+  cancel-in-progress: true
 
 jobs:
   update-maps:
@@ -11,40 +18,40 @@ jobs:
 
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v2
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
 
       - name: Set up Node.js
-        uses: actions/setup-node@v3
+        uses: actions/setup-node@v4
         with:
-          node-version: '22'
+          node-version: 22
+          cache: 'npm'
+          cache-dependency-path: assets/js/package-lock.json
 
       - name: Install dependencies
-        run: npm install
         working-directory: assets/js
+        run: npm ci
 
       - name: Run update script
-        run: node update-maps.js
         working-directory: assets/js
+        run: node update-maps.js
 
       - name: Check for changes
-        id: git-status
+        id: changes
         run: |
-          git config --global user.name 'github-actions'
-          git config --global user.email 'github-actions@github.com'
-          git status
-          if [[ -n $(git status -s) ]]; then
-            echo "::set-output name=has_changes::true"
+          if git diff --quiet; then
+            echo "has_changes=false" >> $GITHUB_OUTPUT
           else
-            echo "::set-output name=has_changes::false"
+            echo "has_changes=true" >> $GITHUB_OUTPUT
           fi
-        working-directory: assets/js
 
       - name: Commit and push updated maps.json
-        if: steps.git-status.outputs.has_changes == 'true'
+        if: steps.changes.outputs.has_changes == 'true'
         run: |
-          git add maps.json
-          git commit -m 'Update maps.json'
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+
+          git add assets/js/maps.json
+          git commit -m "Update maps.json"
           git push
-        working-directory: assets/js
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

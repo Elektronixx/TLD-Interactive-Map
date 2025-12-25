@@ -50,8 +50,8 @@ async function updateMaps() {
       console.log(`Found ${detailBoxes.length} detail boxes on ${url}`);
 
       if (!detailBoxes || detailBoxes.length === 0) {
-        console.warn(`No detail boxes found on ${url}, skipping.`);
-        continue;
+        console.error(`No detail boxes found on ${url}, aborting.`);
+        throw new Error(`No detail boxes found on ${url}`);
       }
 
       detailBoxes.each((_, box) => {

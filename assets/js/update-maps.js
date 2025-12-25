@@ -28,7 +28,9 @@ async function updateMaps() {
 
       const detailBoxes = $('.subSection.detailBox');
       console.log(`Found ${detailBoxes.length} detail boxes.`);
-
+      if (!detailBoxes || detailBoxes.length === 0) {
+        throw new Error(`Unable to get Link from Website: no detailBoxes found`);
+      }
       detailBoxes.each((i, box) => {
         const mapNameDiv = $(box).find('.subSectionTitle');
         let mapName = mapNameDiv

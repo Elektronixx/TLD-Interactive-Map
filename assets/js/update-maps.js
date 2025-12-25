@@ -43,7 +43,7 @@ async function updateMaps() {
         $ = await fetchAndLoad(url);
       } catch (err) {
         console.error(`Failed to fetch ${url}:`, err.message || err);
-        continue; // try next URL
+        throw new Error(`Failed to fetch ${url}:`, err.message || err);
       }
 
       const detailBoxes = $('.subSection.detailBox');

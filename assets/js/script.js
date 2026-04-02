@@ -1,224 +1,269 @@
-let currentCategory = 'pilgrim'; // Default to Pilgrim category
+let currentCategory = 'pilgrim';
+let maps = {};
 
-// Default map images for each map and difficulty
-let maps = {
-  // Default map data can be included here if necessary
-};
+// Single source of truth — pan + zoom both applied as transform on the img
+let zoomLevel = 1;
+let panX = 0, panY = 0;
+let dragging = false;
+let dragStartX = 0, dragStartY = 0;
+let dragStartPanX = 0, dragStartPanY = 0;
 
-// Function to update the maps object from maps.json
+function applyTransform() {
+  const img = document.querySelector('#map-image img');
+  if (img) img.style.transform = `translate(${panX}px, ${panY}px) scale(${zoomLevel})`;
+}
+
+function resetTransform() {
+  zoomLevel = 1; panX = 0; panY = 0;
+  applyTransform();
+}
+
+// ─── Maps JSON ───────────────────────────────────────────────────────────────
+
 async function updateMaps() {
   try {
-    const response = await fetch('assets/js/maps.json'); // Update the path to your maps.json file
-    const mapsData = await response.json();
-    maps = mapsData;
-    console.log('Maps data updated:', maps);
+    const response = await fetch('assets/js/maps.json');
+    if (!response.ok) throw new Error(`HTTP ${response.status}`);
+    maps = await response.json();
+    console.log('Maps data loaded.');
   } catch (error) {
-    console.error('Error fetching or processing maps.json:', error);
+    console.error('Error fetching maps.json:', error);
+    const img = document.getElementById('start-map-image');
+    if (img) img.alt = 'Failed to load map data. Please refresh the page.';
   }
 }
 
-// Function to toggle the difficulty category
+// ─── Difficulty ───────────────────────────────────────────────────────────────
+
 function setCategory(difficulty) {
-  // Set the selected difficulty
   currentCategory = difficulty;
 }
 
-// Function to update the map image based on the selected map and difficulty
-function showMap(mapId) {
-  // Log the mapId to see which map is being selected
-  const images = document.querySelectorAll('.image-container');
-  images.forEach((image) => {
-    image.classList.remove('active'); // Hide all maps
-    image.style.left = '0px'; // Reset position
-    image.style.top = '0px'; // Reset position
-  });
-
-  // Get the correct map image based on the mapId and current difficulty
-  const mapImageUrl = maps[mapId][currentCategory];
-
-  // Set the source of the map image and show the map if the URL is valid
-  if (mapImageUrl) {
-    document.querySelector('#map-image img').src = mapImageUrl;
-    document.querySelector('#map-image').classList.add('active'); // Show the selected map
-  } else {
-    console.error('Map URL not found for', mapId, currentCategory);
-  }
-}
-
-// Implementing drag and drop functionality
-let dragging = false;
-let offsetX = 0,
-  offsetY = 0;
-let zoomLevel = 1;
-document.querySelectorAll('.image-container').forEach((map) => {
-  map.addEventListener('mousedown', (e) => {
-    if (map.classList.contains('active')) {
-      dragging = true;
-      const computedStyle = window.getComputedStyle(map);
-      const currentLeft = parseFloat(computedStyle.left) || 0;
-      const currentTop = parseFloat(computedStyle.top) || 0;
-      offsetX = e.clientX - currentLeft;
-      offsetY = e.clientY - currentTop;
-      map.classList.add('dragging');
-      e.preventDefault();
-    }
-  });
-
-  document.addEventListener('mousemove', (e) => {
-    if (dragging) {
-      map.style.left = `${e.clientX - offsetX}px`;
-      map.style.top = `${e.clientY - offsetY}px`;
-    }
-  });
-
-  document.addEventListener('mouseup', () => {
-    dragging = false;
-    map.classList.remove('dragging');
-  });
-
-  // Scroll zoom functionality
-  map.addEventListener('wheel', (e) => {
-    const img = map.querySelector('img');
-    if (e.deltaY < 0) {
-      zoomLevel += 0.1;
-    } else {
-      zoomLevel -= 0.1;
-    }
-    zoomLevel = Math.min(Math.max(zoomLevel, 0.5), 5); // Limit zoom level
-    img.style.transform = `scale(${zoomLevel})`;
-    e.preventDefault();
-  });
-});
-
-// Difficulty button click handler
 document.querySelectorAll('.difficulty-buttons button').forEach((button) => {
   button.addEventListener('click', () => {
-    // Remove 'active' class from all buttons
     document.querySelectorAll('.difficulty-buttons button').forEach((btn) => {
       btn.classList.remove('active');
     });
-
-    // Add 'active' class to the clicked button
     button.classList.add('active');
-    setCategory(button.id.toLowerCase()); // Update category based on button text
+    setCategory(button.id.toLowerCase());
   });
 });
 
-// Function to load and display the selected map and difficulty
-function loadMap(mapId) {
-  const overlays = document.querySelectorAll('.highlight-overlay');
-  overlays.forEach((el) => el.remove());
-  showMap(mapId);
-  document.getElementById('start-map-image').style.display = 'none'; // Hide the start page
-  document.querySelector('#images-wrapper').style.display = 'block'; // Ensure the image wrapper is visible
-}
+// ─── Map scaling (FIX: stores original coords, never mutates them) ────────────
 
-// Function to scale map areas based on resizing
 function scaleMapAreas() {
   const img = document.getElementById('start-map-image');
-  const areas = document.querySelectorAll('area');
+  if (!img) return;
+
   const originalWidth = img.naturalWidth;
   const originalHeight = img.naturalHeight;
-
-  if (!originalWidth || !originalHeight) {
-    console.error("Image's natural dimensions could not be retrieved.");
-    return;
-  }
+  if (!originalWidth || !originalHeight) return;
 
   const scaleFactorX = img.clientWidth / originalWidth;
   const scaleFactorY = img.clientHeight / originalHeight;
 
-  areas.forEach((area) => {
-    const coordsArray = area.getAttribute('coords').split(',').map(Number);
-    const scaledCoords = coordsArray.map((coord, index) =>
-      Math.round(index % 2 === 0 ? coord * scaleFactorX : coord * scaleFactorY),
+  document.querySelectorAll('area').forEach((area) => {
+    // Store original coords once — never overwrite
+    if (!area.dataset.originalCoords) {
+      area.dataset.originalCoords = area.getAttribute('coords');
+    }
+    const original = area.dataset.originalCoords.split(',').map(Number);
+    const scaled = original.map((coord, index) =>
+      Math.round(index % 2 === 0 ? coord * scaleFactorX : coord * scaleFactorY)
     );
-    area.setAttribute('coords', scaledCoords.join(','));
+    area.setAttribute('coords', scaled.join(','));
   });
 }
 
-// Call scaling function on load and resize
-window.addEventListener('load', () => {
-  scaleMapAreas();
-  updateMaps(); // Update maps data on page load
-});
-window.addEventListener('resize', scaleMapAreas);
+// ─── Show/Load Map ────────────────────────────────────────────────────────────
 
-// Home button event listener
-document.getElementById('homeButton').addEventListener('click', showStartMap);
-
-function showStartMap() {
-  // Show the start map and hide any other map
-  document.getElementById('start-map-image').style.display = 'block';
+function showMap(mapId) {
   document.querySelectorAll('.image-container').forEach((image) => {
     image.classList.remove('active');
     image.style.left = '0px';
     image.style.top = '0px';
   });
-  document.querySelector('#map-image img').src = '';
+
+  const mapImageUrl = maps[mapId]?.[currentCategory];
+  if (mapImageUrl) {
+    const img = document.querySelector('#map-image img');
+    img.src = mapImageUrl;
+    resetTransform();
+    document.querySelector('#map-image').classList.add('active');
+  } else {
+    console.error('Map URL not found for', mapId, currentCategory);
+  }
 }
+
+function loadMap(mapId) {
+  document.querySelectorAll('.highlight-overlay').forEach((el) => el.remove());
+  showMap(mapId);
+  document.getElementById('start-map-image').style.display = 'none';
+  document.querySelector('#images-wrapper').style.display = 'block';
+}
+
+function showStartMap() {
+  document.getElementById('start-map-image').style.display = 'block';
+  document.querySelectorAll('.image-container').forEach((image) => {
+    image.classList.remove('active');
+  });
+  const img = document.querySelector('#map-image img');
+  if (img) img.src = '';
+  resetTransform();
+}
+
+document.getElementById('homeButton').addEventListener('click', showStartMap);
+
+// ─── Drag (mouse) ─────────────────────────────────────────────────────────────
+
+document.querySelectorAll('.image-container').forEach((map) => {
+  map.addEventListener('mousedown', (e) => {
+    if (!map.classList.contains('active')) return;
+    dragging = true;
+    dragStartX = e.clientX;
+    dragStartY = e.clientY;
+    dragStartPanX = panX;
+    dragStartPanY = panY;
+    map.classList.add('dragging');
+    e.preventDefault();
+  });
+
+  // ─── Zoom (mouse wheel) ───────────────────────────────────────────────────
+
+  map.addEventListener('wheel', (e) => {
+    if (!map.classList.contains('active')) return;
+    e.preventDefault();
+    zoomLevel += e.deltaY < 0 ? 0.1 : -0.1;
+    zoomLevel = Math.min(Math.max(zoomLevel, 0.5), 5);
+    applyTransform();
+  }, { passive: false });
+});
+
+document.addEventListener('mousemove', (e) => {
+  if (!dragging) return;
+  panX = dragStartPanX + (e.clientX - dragStartX);
+  panY = dragStartPanY + (e.clientY - dragStartY);
+  applyTransform();
+});
+
+document.addEventListener('mouseup', () => {
+  dragging = false;
+  document.querySelectorAll('.image-container').forEach((m) => m.classList.remove('dragging'));
+});
+
+// ─── Touch support (pinch-zoom + drag) ───────────────────────────────────────
+
+let touchStartDist = null;
+let touchStartZoom = 1;
+let touchStartX = 0, touchStartY = 0;
+let touchStartPanX = 0, touchStartPanY = 0;
+
+function getTouchDistance(touches) {
+  const dx = touches[0].clientX - touches[1].clientX;
+  const dy = touches[0].clientY - touches[1].clientY;
+  return Math.sqrt(dx * dx + dy * dy);
+}
+
+document.querySelectorAll('.image-container').forEach((map) => {
+  map.addEventListener('touchstart', (e) => {
+    if (!map.classList.contains('active')) return;
+    if (e.touches.length === 2) {
+      touchStartDist = getTouchDistance(e.touches);
+      touchStartZoom = zoomLevel;
+    } else if (e.touches.length === 1) {
+      touchStartX = e.touches[0].clientX;
+      touchStartY = e.touches[0].clientY;
+      touchStartPanX = panX;
+      touchStartPanY = panY;
+    }
+    e.preventDefault();
+  }, { passive: false });
+
+  map.addEventListener('touchmove', (e) => {
+    if (!map.classList.contains('active')) return;
+    if (e.touches.length === 2 && touchStartDist !== null) {
+      const currentDist = getTouchDistance(e.touches);
+      zoomLevel = Math.min(Math.max(touchStartZoom * (currentDist / touchStartDist), 0.5), 5);
+    } else if (e.touches.length === 1) {
+      panX = touchStartPanX + (e.touches[0].clientX - touchStartX);
+      panY = touchStartPanY + (e.touches[0].clientY - touchStartY);
+    }
+    applyTransform();
+    e.preventDefault();
+  }, { passive: false });
+
+  map.addEventListener('touchend', (e) => {
+    if (e.touches.length < 2) touchStartDist = null;
+  });
+});
+
+// ─── Settings popup (cog) ─────────────────────────────────────────────────────
 
 document.addEventListener('DOMContentLoaded', () => {
   const cogIconContainer = document.getElementById('cog-icon');
   const cogIcon = cogIconContainer.querySelector('i');
   const settingsPopup = document.getElementById('settings-popup');
 
-  // Function to toggle the popup and rotate the cog icon
   const togglePopup = () => {
-    if (settingsPopup.style.display === 'block') {
-      settingsPopup.style.display = 'none';
-      cogIcon.classList.remove('rotate');
-    } else {
-      settingsPopup.style.display = 'block';
-      cogIcon.classList.add('rotate');
-    }
+    const isVisible = settingsPopup.style.display === 'block';
+    settingsPopup.style.display = isVisible ? 'none' : 'block';
+    cogIcon.classList.toggle('rotate', !isVisible);
   };
 
-  // Attach the toggle function to both the cog icon and its container
   cogIconContainer.addEventListener('click', togglePopup);
-  cogIcon.addEventListener('click', (event) => {
-    event.stopPropagation();
+  cogIcon.addEventListener('click', (e) => {
+    e.stopPropagation();
     togglePopup();
   });
 
-  // Close the popup when clicking outside of it
-  window.addEventListener('click', (event) => {
+  window.addEventListener('click', (e) => {
     if (
-      event.target !== settingsPopup &&
-      event.target !== cogIconContainer &&
-      !settingsPopup.contains(event.target)
+      e.target !== settingsPopup &&
+      e.target !== cogIconContainer &&
+      !settingsPopup.contains(e.target)
     ) {
       settingsPopup.style.display = 'none';
       cogIcon.classList.remove('rotate');
     }
   });
 
-  // Set a delay of 2 seconds (2000 milliseconds) before running the highlight animation
-  setTimeout(() => {
-    const overlayContainer = document.getElementById('overlay-container');
-    const areaElements = document.querySelectorAll('area');
+  // ─── Highlight aura animation (FIX: uses scaled image rect for positioning) ──
 
-    areaElements.forEach((el) => {
-      // Check if coords attribute exists
-      if (el.coords) {
-        const coords = el.coords.split(',').map(Number);
-        const overlay = document.createElement('div');
-        overlay.classList.add('highlight-overlay', 'highlight-aura');
-        overlay.style.left = `${coords[0]}px`;
-        overlay.style.top = `${coords[1]}px`;
-        overlay.style.width = `${coords[2] - coords[0]}px`;
-        overlay.style.height = `${coords[3] - coords[1]}px`;
-        overlayContainer.appendChild(overlay);
-      } else {
-        console.error('coords attribute missing for element:', el); // Error handling
-      }
+  setTimeout(() => {
+    const img = document.getElementById('start-map-image');
+    const overlayContainer = document.getElementById('overlay-container');
+    const imgRect = img.getBoundingClientRect();
+    const containerRect = overlayContainer.getBoundingClientRect();
+
+    document.querySelectorAll('area').forEach((el) => {
+      const rawCoords = el.dataset.originalCoords || el.getAttribute('coords');
+      if (!rawCoords) return;
+
+      const coords = rawCoords.split(',').map(Number);
+      const scaleX = imgRect.width  / img.naturalWidth;
+      const scaleY = imgRect.height / img.naturalHeight;
+
+      const overlay = document.createElement('div');
+      overlay.classList.add('highlight-overlay', 'highlight-aura');
+      overlay.style.left   = `${imgRect.left - containerRect.left + coords[0] * scaleX}px`;
+      overlay.style.top    = `${imgRect.top  - containerRect.top  + coords[1] * scaleY}px`;
+      overlay.style.width  = `${(coords[2] - coords[0]) * scaleX}px`;
+      overlay.style.height = `${(coords[3] - coords[1]) * scaleY}px`;
+      overlayContainer.appendChild(overlay);
     });
 
-    // Remove the overlays after the animation duration (3 seconds)
+    // Remove overlays after animation
     setTimeout(() => {
-      const overlays = document.querySelectorAll('.highlight-overlay');
-      overlays.forEach((el) => el.remove());
-      console.log('Highlight overlays removed'); // Debugging output
-    }, 5000); // Duration of the highlight in milliseconds
-  }, 1000); // Delay of 2 seconds before running the function
+      document.querySelectorAll('.highlight-overlay').forEach((el) => el.remove());
+    }, 5000);
+  }, 1000);
 });
+
+// ─── Init ─────────────────────────────────────────────────────────────────────
+
+window.addEventListener('load', () => {
+  scaleMapAreas();
+  updateMaps();
+});
+
+window.addEventListener('resize', scaleMapAreas);

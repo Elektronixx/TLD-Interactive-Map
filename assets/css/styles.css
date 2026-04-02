@@ -1,21 +1,117 @@
+/* ─── Reset & Base ───────────────────────────────────────────────────────────── */
+
 body {
   font-family: Arial, sans-serif;
   background-color: #2c2c2c;
   color: white;
   margin: 0;
   padding: 0;
-  overflow: hidden; /* Prevent body scroll */
+  overflow: hidden;
   user-select: none;
-  display: flex; /* Use flex layout for the body */
-  flex-direction: column; /* Stack children vertically */
-  height: 100vh; /* Make body take full viewport height */
+  display: flex;
+  flex-direction: column;
+  height: 100vh;
+  height: 100dvh; /* FIX: dvh accounts for mobile browser chrome (address bar) */
 }
 
 summary {
   margin: 0 0 5px;
 }
 
-/* Style for the cog icon */
+button:focus {
+  outline: none;
+}
+
+/* ─── Start Map ──────────────────────────────────────────────────────────────── */
+
+#start-map-container {
+  width: 100%;
+}
+
+#start-map-image {
+  display: block;
+  width: 100%;
+  height: auto;
+  touch-action: none; /* FIX: prevents browser swipe gestures stealing touch events */
+}
+
+/* ─── Map Viewer ─────────────────────────────────────────────────────────────── */
+
+#images-wrapper {
+  position: relative;
+  top: 0;
+  left: 0;
+  margin: 0;
+  padding: 0;
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+  display: none; /* hidden until a map is loaded */
+}
+
+.image-container {
+  display: none;
+  text-align: center;
+  position: relative;
+  cursor: grab;
+  z-index: 1;
+  width: 100%;
+  height: 100%;
+  touch-action: none;
+}
+
+.image-container.active {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.image-container img {
+  max-width: 100%;
+  max-height: 100vh;
+  max-height: 100dvh;
+  width: auto;
+  height: auto;
+  transform-origin: center center;
+  transition: transform 0.05s ease-out;
+  pointer-events: none;
+  will-change: transform; /* hint to browser for smoother rendering */
+}
+
+.image-container.dragging {
+  cursor: grabbing;
+}
+
+/* ─── Overlay / Highlight Aura ───────────────────────────────────────────────── */
+
+#overlay-container {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+  z-index: 10;
+}
+
+.highlight-overlay {
+  position: absolute;
+  pointer-events: none;
+  border-radius: 5px;
+}
+
+@keyframes lightaura {
+  0%   { box-shadow: 0 0 10px rgb(255 255 255 / 50%); }
+  50%  { box-shadow: 0 0 20px rgb(255 255 255 / 70%); }
+  100% { box-shadow: 0 0 10px rgb(255 255 255 / 50%); }
+}
+
+.highlight-aura {
+  animation: lightaura 2s ease-in-out infinite;
+}
+
+/* ─── Cog Icon ───────────────────────────────────────────────────────────────── */
+
 .cog-icon {
   position: fixed;
   bottom: 20px;
@@ -25,55 +121,27 @@ summary {
   background: #222;
   cursor: pointer;
   display: flex;
-  flex-direction: column;
   align-items: center;
-  justify-content: space-around;
+  justify-content: center;
   border: 2px solid #fff;
   border-radius: 8px;
   z-index: 1000;
 }
 
 .cog-icon i {
-  font-size: 35px;
+  font-size: 28px;
 }
 
-/* Style for the cog icon itself */
 .cog-icon i.rotate {
   animation: rotate 2s linear infinite;
 }
 
 @keyframes rotate {
-  0% {
-    transform: rotate(0deg);
-  }
-
-  100% {
-    transform: rotate(360deg);
-  }
+  0%   { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
 }
 
-/* Style for the popup */
-.settings-popup {
-  display: none;
-  position: fixed;
-  bottom: 100px;
-  left: 20px;
-  width: 750px;
-  background-color: inherit;
-  border: 2px solid #fff; /* Optional: Add a white border */
-  border-radius: 8px; /* Optional: Rounded corners */
-  box-shadow: 0 4px 8px rgb(0 0 0 / 10%);
-  z-index: 1001;
-}
-
-/* Popup content */
-.popup-content {
-  padding: 20px;
-  text-align: center;
-  display: grid;
-  grid-template-columns: 1fr 1fr; /* Two equal-width columns */
-  gap: 10px; /* Optional: space between columns */
-}
+/* ─── Home Button ────────────────────────────────────────────────────────────── */
 
 .home-button {
   position: fixed;
@@ -84,8 +152,7 @@ summary {
   background: #222;
   cursor: pointer;
   display: flex;
-  flex-direction: column;
-  justify-content: space-around;
+  justify-content: center;
   align-items: center;
   z-index: 1000;
   border: 2px solid #fff;
@@ -97,11 +164,84 @@ summary {
   height: 35px;
 }
 
-/* Menu Items */
+/* ─── Settings Popup ─────────────────────────────────────────────────────────── */
+
+.settings-popup {
+  display: none;
+  position: fixed;
+  bottom: 90px;
+  left: 20px;
+  width: min(750px, calc(100vw - 40px)); /* FIX: was fixed 750px, overflowed on mobile */
+  background-color: #2c2c2c;
+  border: 2px solid #fff;
+  border-radius: 8px;
+  box-shadow: 0 4px 8px rgb(0 0 0 / 30%);
+  z-index: 1001;
+  max-height: calc(100dvh - 120px);
+  overflow-y: auto; /* FIX: popup was unscrollable if content overflowed */
+}
+
+.popup-content {
+  padding: 20px;
+  text-align: center;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+}
+
+/* FIX: on narrow screens, stack the two columns */
+@media (max-width: 540px) {
+  .popup-content {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* ─── Difficulty Buttons ─────────────────────────────────────────────────────── */
+
+.difficulty-buttons {
+  display: grid;
+  justify-content: center;
+  margin-top: 20px;
+  gap: 10px;
+}
+
+.difficulty-buttons button {
+  padding: 10px 16px;
+  font-size: 16px;
+  cursor: pointer;
+  background-color: #222;
+  color: white;
+  border: 2px solid #fff;
+  border-radius: 8px;
+}
+
+.difficulty-buttons button:hover {
+  background-color: #555;
+}
+
+.difficulty-buttons button.active {
+  background-color: #1e2f4b;
+  color: white;
+  border: 2px solid #1e2f4b;
+  box-shadow: 0 0 8px rgb(0 128 255 / 70%);
+  transition: background-color 0.2s ease, box-shadow 0.2s ease;
+}
+
+/* ─── Menu (unused but kept for future) ──────────────────────────────────────── */
+
+.menu-container {
+  position: relative;
+  z-index: 9999;
+  padding: 20px;
+  background-color: #333;
+  color: white;
+  border-bottom: 3px solid #444;
+}
+
 #menu-items {
   position: fixed;
   top: 0;
-  left: -300px; /* Start off-screen */
+  left: -300px;
   width: 250px;
   height: 100%;
   background-color: #333;
@@ -111,14 +251,13 @@ summary {
   justify-content: center;
   transition: left 0.3s ease-in-out;
   z-index: 9998;
-  overflow: hidden auto; /* Make the menu vertically scrollable */ /* Prevent horizontal scrolling */
+  overflow: hidden auto;
 }
 
 #menu-items.open {
-  left: 0; /* Slide in */
+  left: 0;
 }
 
-/* Menu Links */
 #menu-items ul {
   list-style-type: none;
   padding: 0;
@@ -141,149 +280,54 @@ summary {
   color: #ff9800;
 }
 
-button:focus {
-  outline: none;
-}
+/* ─── Mobile & Tablet ────────────────────────────────────────────────────────── */
 
-.menu-container {
-  position: relative;
-  top: 0;
-  left: 0;
-  right: 0;
-  z-index: 9999;
-  padding: 20px;
-  background-color: #333;
-  color: white;
-  border-bottom: 3px solid #444;
-}
-
-#start-map-container {
-  width: 100%; /* Responsive width */
-}
-
-#start-map-image {
-  display: block;
-  width: 100%; /* Responsive scaling */
-  height: auto; /* Maintain aspect ratio */
-}
-
-.difficulty-buttons {
-  display: grid;
-  justify-content: safe center;
-  margin-top: 30px;
-}
-
-.difficulty-buttons button {
-  padding: 10px;
-  font-size: 16px;
-  cursor: pointer;
-  background-color: #222;
-  color: white;
-  margin: 0 0 20px;
-  border: 2px solid #fff; /* Optional: Add a white border */
-  border-radius: 8px; /* Optional: Rounded corners */
-}
-
-.difficulty-buttons button:hover {
-  background-color: #555;
-}
-
-/* Highlight the selected difficulty-button */
-.difficulty-buttons button.active {
-  background-color: #1e2f4b; /* Highlight color (example: orange) */
-  color: white; /* Text color */
-  border: 2px solid #1e2f4b; /* Optional border for emphasis */
-  outline: none; /* Remove default focus outline */
-  box-shadow: 0 0 8px rgb(0 128 255 / 70%); /* Optional glow effect */
-  transition:
-    background-color 0.2s ease,
-    box-shadow 0.2s ease;
-}
-
-.category-container {
-  display: flex;
-  flex-direction: column;
-  text-align: center;
-  margin-top: 20px;
-}
-
-.category-container .category {
-  display: none;
-}
-
-.category-container .category.active {
-  display: block;
-}
-
-.category-container .category button {
-  padding: 10px;
-  margin: 5px;
-  background-color: #222;
-  color: white;
-  cursor: pointer;
-  border: 2px solid #fff; /* Optional: Add a white border */
-  border-radius: 8px; /* Optional: Rounded corners */
-}
-
-.category-container .category button:hover {
-  background-color: #555;
-}
-
-#images-wrapper {
-  position: relative;
-  top: 0;
-  left: 0;
-  margin: 0;
-  padding: 0;
-  width: 100%;
-  height: 100%;
-  overflow: hidden; /* Ensures no overflow issues */
-}
-
-.image-container {
-  display: none;
-  text-align: center;
-  margin-top: 20px;
-  position: relative; /* Change from absolute to relative */
-  cursor: grab;
-  z-index: 1;
-}
-
-.image-container.active {
-  display: block;
-}
-
-.image-container img {
-  max-width: 100%;
-  width: 50%;
-  transform-origin: center center;
-  transition: transform 0.1s ease-out;
-}
-
-.image-container img.dragging {
-  cursor: grabbing;
-}
-
-@keyframes lightaura {
-  0% {
-    box-shadow: 0 0 10px rgb(255 255 255 / 50%);
+@media (max-width: 768px) {
+  /* Buttons easier to tap on touch screens */
+  .cog-icon,
+  .home-button {
+    width: 48px;
+    height: 48px;
+    bottom: 16px;
   }
 
-  50% {
-    box-shadow: 0 0 20px rgb(255 255 255 / 70%);
+  .cog-icon {
+    left: 16px;
   }
 
-  100% {
-    box-shadow: 0 0 10px rgb(255 255 255 / 50%);
+  .home-button {
+    right: 16px;
+  }
+
+  .home-button img {
+    width: 28px;
+    height: 28px;
+  }
+
+  .cog-icon i {
+    font-size: 24px;
+  }
+
+  .difficulty-buttons button {
+    font-size: 14px;
+    padding: 10px 12px;
+  }
+
+  /* Map image fills screen properly on mobile */
+  .image-container img {
+    max-width: 100vw;
+    max-height: 100dvh;
   }
 }
 
-.highlight-aura {
-  animation: lightaura 2s ease-in-out infinite;
-}
+/* ─── Tablet landscape specific ─────────────────────────────────────────────── */
 
-.highlight-overlay {
-  position: absolute;
-  pointer-events: none;
-  border-radius: 5px;
+@media (min-width: 768px) and (max-width: 1024px) {
+  .settings-popup {
+    width: min(600px, calc(100vw - 40px));
+  }
+
+  .image-container img {
+    max-width: 90vw;
+  }
 }

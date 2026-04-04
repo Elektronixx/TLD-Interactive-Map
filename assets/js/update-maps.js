@@ -1,5 +1,3 @@
-import fetch from 'node-fetch';
-import * as cheerio from 'cheerio';
 import fs from 'fs/promises';
 import path from 'path';
 import { fileURLToPath } from 'url';
@@ -14,22 +12,51 @@ const __dirname = path.dirname(__filename);
 
 function normalizeMapName(name) {
   if (!name) return '';
-  let mapName = name.trim().toLowerCase().replace(/\s+/g, '-');
-  mapName = mapName.replace(/-v\d+(\.\d+)*$/, '');
-  mapName = mapName.replace(/^\|dlc\|-/i, '');
-  mapName = mapName.replace(/-map$/i, '');
-  mapName = mapName.replace(/'/g, '');
-  mapName = mapName.replace(/-+/g, '-').replace(/^-|-$/g, '');
-  return mapName;
+  return name
+    .trim()
+    .toLowerCase()
+    .replace(/\s+/g, '-')
+    .replace(/-v\d+(\.\d+)*$/, '')
+    .replace(/^\|dlc\|-/i, '')
+    .replace(/-map$/i, '')
+    .replace(/'/g, '')
+    .replace(/-+/g, '-')
+    .replace(/^-|-$/g, '');
 }
 
-async function fetchAndLoad(url) {
+async function fetchPage(url) {
   const res = await fetch(url);
-  if (!res.ok) {
-    throw new Error(`HTTP ${res.status} ${res.statusText} fetching ${url}`);
+  if (!res.ok) throw new Error(`HTTP ${res.status} fetching ${url}`);
+  return res.text();
+}
+
+function extractDetailBoxes(html) {
+  // Extract each subSection detailBox block
+  const boxes = [];
+  const boxRegex = /<div[^>]*class="[^"]*subSection detailBox[^"]*"[^>]*>([\s\S]*?)<\/div>\s*<\/div>/g;
+  let match;
+  while ((match = boxRegex.exec(html)) !== null) {
+    boxes.push(match[0]);
   }
-  const body = await res.text();
-  return cheerio.load(body);
+  return boxes;
+}
+
+function extractTitle(boxHtml) {
+  const match = boxHtml.match(/<div[^>]*class="[^"]*subSectionTitle[^"]*"[^>]*>([\s\S]*?)<\/div>/);
+  if (!match) return '';
+  // Strip any inner HTML tags
+  return match[1].replace(/<[^>]+>/g, '').trim();
+}
+
+function extractLinks(boxHtml) {
+  const links = [];
+  const linkRegex = /<a[^>]*class="[^"]*modalContentLink[^"]*"[^>]*href="([^"]+)"/g;
+  let match;
+  while ((match = linkRegex.exec(boxHtml)) !== null) {
+    const href = match[1].trim();
+    if (href) links.push(href);
+  }
+  return [...new Set(links)];
 }
 
 async function updateMaps() {
@@ -38,67 +65,42 @@ async function updateMaps() {
 
     for (const url of urls) {
       console.log('Fetching', url);
-      let $;
-      try {
-        $ = await fetchAndLoad(url);
-      } catch (err) {
-        console.error(`Failed to fetch ${url}:`, err.message || err);
-        throw new Error(`Failed to fetch ${url}:`, err.message || err);
-      }
+      const html = await fetchPage(url);
+      const boxes = extractDetailBoxes(html);
+      console.log(`Found ${boxes.length} detail boxes on ${url}`);
 
-      const detailBoxes = $('.subSection.detailBox');
-      console.log(`Found ${detailBoxes.length} detail boxes on ${url}`);
+      if (boxes.length === 0) throw new Error(`No detail boxes found on ${url}`);
 
-      if (!detailBoxes || detailBoxes.length === 0) {
-        console.error(`No detail boxes found on ${url}, aborting.`);
-        throw new Error(`No detail boxes found on ${url}`);
-      }
-
-      detailBoxes.each((_, box) => {
-        const $box = cheerio.load(box);
-        const titleEl = $box('.subSectionTitle').first();
-        const rawName = titleEl.text() || '';
+      for (const box of boxes) {
+        const rawName = extractTitle(box);
         const mapName = normalizeMapName(rawName);
 
         if (!mapName) {
-          console.warn('Skipping detailBox with empty/invalid name');
-          return;
+          console.warn('Skipping box with empty name');
+          continue;
         }
 
-        const links = $box('a.modalContentLink');
-        const mapLinks = [];
-        links.each((_, a) => {
-          const href = $box(a).attr('href') || '';
-          const trimmed = href.trim();
-          if (trimmed) mapLinks.push(trimmed);
-        });
-
-        // keep first two meaningful links
-        const unique = Array.from(new Set(mapLinks));
-        if (unique.length === 0) {
+        const links = extractLinks(box);
+        if (links.length === 0) {
           console.warn(`No links found for "${mapName}", skipping.`);
-          return;
+          continue;
         }
 
-        if (unique.length === 1) {
-          maps[mapName] = { pilgrim: unique[0], interloper: unique[0] };
-        } else {
-          maps[mapName] = { pilgrim: unique[0], interloper: unique[1] };
-        }
-
-        console.log(`Added map "${mapName}" with ${unique.length} link(s)`);
-      });
+        maps[mapName] = {
+          pilgrim: links[0],
+          interloper: links[1] ?? links[0],
+        };
+        console.log(`Added "${mapName}" with ${links.length} link(s)`);
+      }
     }
 
-    if (Object.keys(maps).length === 0) {
-      throw new Error('No maps were found from any source URLs.');
-    }
+    if (Object.keys(maps).length === 0) throw new Error('No maps found from any source.');
 
-    const outputFilePath = path.join(__dirname, 'maps.json');
-    await fs.writeFile(outputFilePath, JSON.stringify(maps, null, 2), 'utf8');
-    console.log(`maps.json updated: ${outputFilePath} (entries: ${Object.keys(maps).length})`);
+    const outputPath = path.join(__dirname, 'maps.json');
+    await fs.writeFile(outputPath, JSON.stringify(maps, null, 2), 'utf8');
+    console.log(`maps.json written (${Object.keys(maps).length} entries)`);
   } catch (err) {
-    console.error('Error:', err && err.message ? err.message : err);
+    console.error('Error:', err.message ?? err);
     process.exit(1);
   }
 }

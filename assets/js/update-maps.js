@@ -14,6 +14,11 @@ function normalizeMapName(name) {
   if (!name) return '';
   return name
     .trim()
+    .replace(/&amp;/g, '&')
+    .replace(/&lt;/g, '<')
+    .replace(/&gt;/g, '>')
+    .replace(/&quot;/g, '"')
+    .replace(/&#39;/g, "'")
     .toLowerCase()
     .replace(/\s+/g, '-')
     .replace(/-v\d+(\.\d+)*$/, '')
@@ -31,13 +36,38 @@ async function fetchPage(url) {
 }
 
 function extractDetailBoxes(html) {
-  // Extract each subSection detailBox block
   const boxes = [];
-  const boxRegex = /<div[^>]*class="[^"]*subSection detailBox[^"]*"[^>]*>([\s\S]*?)<\/div>\s*<\/div>/g;
-  let match;
-  while ((match = boxRegex.exec(html)) !== null) {
-    boxes.push(match[0]);
+  const searchStr = 'class="subSection detailBox"';
+  let pos = 0;
+
+  while (true) {
+    const start = html.indexOf(searchStr, pos);
+    if (start === -1) break;
+
+    // Find the opening <div tag start
+    const divStart = html.lastIndexOf('<div', start);
+
+    // Walk forward counting open/close divs to find matching closing tag
+    let depth = 0;
+    let i = divStart;
+    while (i < html.length) {
+      if (html[i] === '<') {
+        if (html.slice(i, i + 4) === '<div') {
+          depth++;
+        } else if (html.slice(i, i + 6) === '</div>') {
+          depth--;
+          if (depth === 0) {
+            boxes.push(html.slice(divStart, i + 6));
+            pos = i + 6;
+            break;
+          }
+        }
+      }
+      i++;
+    }
+    if (depth !== 0) break; // malformed HTML guard
   }
+
   return boxes;
 }
 

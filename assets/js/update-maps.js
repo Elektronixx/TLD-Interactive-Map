@@ -50,11 +50,14 @@ function extractTitle(boxHtml) {
 
 function extractLinks(boxHtml) {
   const links = [];
-  const linkRegex = /<a[^>]*class="[^"]*modalContentLink[^"]*"[^>]*href="([^"]+)"/g;
+  // Match any <a> tag that contains modalContentLink anywhere in its attributes
+  const tagRegex = /<a\s([^>]*)>/g;
   let match;
-  while ((match = linkRegex.exec(boxHtml)) !== null) {
-    const href = match[1].trim();
-    if (href) links.push(href);
+  while ((match = tagRegex.exec(boxHtml)) !== null) {
+    const attrs = match[1];
+    if (!attrs.includes('modalContentLink')) continue;
+    const hrefMatch = attrs.match(/href="([^"]+)"/);
+    if (hrefMatch) links.push(hrefMatch[1].trim());
   }
   return [...new Set(links)];
 }

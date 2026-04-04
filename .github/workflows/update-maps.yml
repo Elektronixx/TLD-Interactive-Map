@@ -19,38 +19,24 @@ jobs:
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
-        with:
-          fetch-depth: 0
 
       - name: Set up Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: 24
-          cache: 'npm'
-
-      - name: Install dependencies
-        working-directory: assets/js
-        run: npm ci
+          node-version: 22 # 22 LTS — fetch built-in, no npm needed
 
       - name: Run update script
         working-directory: assets/js
         run: node update-maps.js
 
-      - name: Check for changes
-        id: changes
+      - name: Commit and push updated maps.json
         run: |
           if git diff --quiet; then
-            echo "has_changes=false" >> $GITHUB_OUTPUT
-          else
-            echo "has_changes=true" >> $GITHUB_OUTPUT
+            echo "No changes to maps.json"
+            exit 0
           fi
-
-      - name: Commit and push updated maps.json
-        if: steps.changes.outputs.has_changes == 'true'
-        run: |
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
-
           git add assets/js/maps.json
           git commit -m "Update maps.json"
           git push

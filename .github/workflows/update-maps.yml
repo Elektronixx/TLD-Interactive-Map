@@ -23,7 +23,7 @@ jobs:
       - name: Set up Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: 22 # 22 LTS — fetch built-in, no npm needed
+          node-version: 24 # 24 LTS — fetch built-in, no npm needed
 
       - name: Run update script
         working-directory: assets/js

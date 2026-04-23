@@ -64,6 +64,15 @@ const mapTransitions = {
     { x: 1159, y: 3798, w: 150, h: 150, target: "winding-river-&-carter-hydro-dam" },
     { x: 4307, y: 3783, w: 150, h: 150, target: "coastal-highway" },
     { x: 3928, y: 51, w: 150, h: 150, target: "timberwolf-mountain" },
+    { x: 229, 
+      y: 2105, 
+      w: 150, 
+      h: 150, 
+      targets : [
+        { name: "Keeper's Pass", id: "keepers-pass" },
+        { name: "Blackrock", id: "blackrock" }
+      ]
+    },
   ],
   "coastal-highway" : [
     { x: 321, y: 271, w: 150, h: 150, target: "ravine" },
@@ -87,6 +96,15 @@ const mapTransitions = {
   ],
   "blackrock" : [
     { x: 2935, y: 2173, w: 150, h: 150, target: "timberwolf-mountain" },
+    { x: 1326,
+      y: 3251, 
+      w: 150, 
+      h: 150, 
+      targets : [
+        { name: "Keeper's Pass", id: "keepers-pass" },
+        { name: "Pleasant Valley", id: "pleasant-valley" }
+      ] 
+    }
   ],
   "timberwolf-mountain" : [
     { x: 272, y: 2539, w: 150, h: 150, target: "pleasant-valley" },
@@ -105,7 +123,34 @@ const mapTransitions = {
   ],
   "hushed-river-valley" : [
     { x: 695, y: 2557, w: 150, h: 150, target: "mountain-town" },
+  ],
+  "broken-railroad" : [
+    { x: 2208, y: 1341, w: 150, h: 150, target: "forlorn-muskeg" },
+    { x: 130, y: 1531, w: 150, h: 150, target: "far-range-branch-line" },
+  ],
+  "far-range-branch-line" : [
+    { x: 2850, y: 331, w: 150, h: 150, target: "broken-railroad" },
+    { x: 156, y: 728, w: 150, h: 150, target: "transfer-pass" },
+  ],
+  "transfer-pass" : [
+    { x: 1500, y: 1878, w: 150, h: 150, target: "far-range-branch-line" },
+    { x: 815, y: 1016, w: 150, h: 150, target: "forsaken-airfield" },
+    { x: 1580, y: 142, w: 150, h: 150, target: "zone-of-contamination" },
+    { x: 568, y: 139, w: 150, h: 150, target: "sundered-pass" },
+  ],
+  "zone-of-contamination" : [
+    { x: 1247, y: 2797, w: 150, h: 150, target: "forsaken-airfield" },
+    { x: 2871, y: 2631, w: 150, h: 150, target: "transfer-pass" },
+  ],
+  "sundered-pass" : [
+    { x: 1387, y: 4244, w: 150, h: 150, target: "transfer-pass" },
+    { x: 506, y: 2898, w: 150, h: 150, target: "forsaken-airfield" },
+  ],
+  "forsaken-airfield" : [
+    { x: 3084, y: 4186, w: 150, h: 150, target: "transfer-pass" },
+    { x: 4463, y: 2045, w: 150, h: 150, target: "sundered-pass" },
   ]
+
 }
 
 // ─── Difficulty ───────────────────────────────────────────────────────────────
@@ -376,7 +421,20 @@ window.addEventListener('resize', scaleMapAreas);
 
 // ─── Passage Click Coordinates Logic ──────────────────────────────────────────
 
-const mapContainer = document.querySelector('#map-image'); // Fix: Attach events to the container
+const transitionMenu = document.createElement('div');
+transitionMenu.className = 'transition-popup';
+transitionMenu.style.display = 'none';
+document.body.appendChild(transitionMenu);
+
+// Hide the menu if clicking outside of it
+document.addEventListener('mousedown', (e) => {
+  if (!transitionMenu.contains(e.target)) {
+    transitionMenu.style.display = 'none';
+  }
+});
+
+// --- Passage Click Coordinates Logic ---
+const mapContainer = document.querySelector('#map-image');
 let clickStartX = 0;
 let clickStartY = 0;
 
@@ -407,12 +465,70 @@ mapContainer.addEventListener('mouseup', (e) => {
       clickX >= t.x && clickX <= t.x + t.w &&
       clickY >= t.y && clickY <= t.y + t.h
     ) {
-      console.log(`Transition detected! Loading: ${t.target}`);
-      loadMap(t.target);
+      // IF MULTIPLE DESTINATIONS (Floating Menu)
+      if (t.targets) {
+        transitionMenu.innerHTML = ''; // Clear old buttons
+        transitionMenu.style.left = `${e.clientX}px`;
+        transitionMenu.style.top = `${e.clientY}px`;
+        transitionMenu.style.display = 'flex';
+
+        t.targets.forEach(dest => {
+          const btn = document.createElement('button');
+          btn.innerText = `To ${dest.name}`;
+          btn.onclick = () => {
+            transitionMenu.style.display = 'none';
+            loadMap(dest.id);
+          };
+          transitionMenu.appendChild(btn);
+        });
+      }
+      // IF SINGLE DESTINATION (Direct Map Load)
+      else if (t.target) {
+        console.log(`Transition detected! Loading: ${t.target}`);
+        loadMap(t.target);
+      }
       break;
     }
   }
 });
+
+// ─── Hover effect logic (cursor to pointer) ───────────────────────────────────
+mapContainer.addEventListener('mousemove', (e) => {
+  if (dragging || !currentMapId) {
+    mapContainer.style.cursor = ''; 
+    return;
+  }
+
+  const transitions = mapTransitions[currentMapId];
+  if (!transitions) {
+    mapContainer.style.cursor = '';
+    return;
+  }
+
+  const regionImage = mapContainer.querySelector('img');
+  const rect = regionImage.getBoundingClientRect();
+  const scaleX = rect.width / regionImage.naturalWidth;
+  const scaleY = rect.height / regionImage.naturalHeight;
+
+  // Calcula onde o mouse está na imagem original
+  const hoverX = (e.clientX - rect.left) / scaleX;
+  const hoverY = (e.clientY - rect.top) / scaleY;
+
+  let isHovering = false;
+  
+  for (const t of transitions) {
+    if (
+      hoverX >= t.x && hoverX <= t.x + t.w &&
+      hoverY >= t.y && hoverY <= t.y + t.h
+    ) {
+      isHovering = true;
+      break;
+    }
+  }
+
+  mapContainer.style.cursor = isHovering ? 'pointer' : '';
+});
+
 
 // ─── Devoloper tools: Right-click on the red passage in the map ───────────────
 mapContainer.addEventListener('contextmenu', (e) => {

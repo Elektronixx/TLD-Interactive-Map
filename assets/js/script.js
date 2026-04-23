@@ -33,6 +33,81 @@ async function updateMaps() {
   }
 }
 
+// ─── Passage Coordinates ──────────────────────────────────────────────────────
+
+let currentMapid = null;
+
+const mapTransitions = {
+  "mystery-lake": [
+    { x: 1933, y: 4230, w: 150, h: 150, target: "forlorn-muskeg" },
+    { x: 667, y: 4160, w: 150, h: 150, target: "mountain-town" },
+    { x: 3823, y: 1202, w: 150, h: 150, target: "winding-river-&-carter-hydro-dam" },
+    { x: 3980, y: 1427, w: 150, h: 150, target: "ravine" },
+  ],
+  "forlorn-muskeg": [
+    { x: 2974, y: 1646, w: 150, h: 150, target: "mystery-lake" },
+    { x: 176, y: 2037, w: 150, h: 150, target: "broken-railroad" },
+    { x: 701, y: 923, w: 150, h: 150, target: "mountain-town" },
+    { x: 2399, y: 3329, w: 150, h: 150, target: "bleak-inlet" },
+  ],
+  "ravine" : [
+    { x: 104, y: 916, w: 150, h: 150, target: "mystery-lake" },
+    { x: 1210, y: 1120, w: 150, h: 150, target: "bleak-inlet" },
+    { x: 2088, y: 894, w: 150, h: 150, target: "coastal-highway" },
+  ],
+  "winding-river-&-carter-hydro-dam" : [
+    { x: 1806, y: 2987, w: 150, h: 150, target: "mystery-lake" },
+    { x: 2699, y: 1655, w: 150, h: 150, target: "mystery-lake" },
+    { x: 3194, y: 593, w: 150, h: 150, target: "pleasant-valley" },
+  ],
+  "pleasant-valley" : [
+    { x: 1159, y: 3798, w: 150, h: 150, target: "winding-river-&-carter-hydro-dam" },
+    { x: 4307, y: 3783, w: 150, h: 150, target: "coastal-highway" },
+    { x: 3928, y: 51, w: 150, h: 150, target: "timberwolf-mountain" },
+  ],
+  "coastal-highway" : [
+    { x: 321, y: 271, w: 150, h: 150, target: "ravine" },
+    { x: 2042, y: 58, w: 150, h: 150, target: "pleasant-valley" },
+    { x: 3175, y: 2846, w: 150, h: 150, target: "crumbling-highway" },
+  ],
+  "crumbling-highway" : [
+    { x: 125, y: 895, w: 150, h: 150, target: "coastal-highway" },
+    { x: 1617, y: 722, w: 150, h: 150, target: "desolation-point" },
+  ],
+  "desolation-point" : [
+    { x: 133, y: 976, w: 150, h: 150, target: "crumbling-highway" },
+  ],
+  "bleak-inlet" : [
+    { x: 2336, y: 658, w: 150, h: 150, target: "ravine" },
+    { x: 1601, y: 793, w: 150, h: 150, target: "forlorn-muskeg" },
+  ],
+  "keepers-pass" : [
+    { x: 995, y: 1626, w: 150, h: 150, target: "pleasant-valley" },
+    { x: 1562, y: 364, w: 150, h: 150, target: "blackrock" },
+  ],
+  "blackrock" : [
+    { x: 2935, y: 2173, w: 150, h: 150, target: "timberwolf-mountain" },
+  ],
+  "timberwolf-mountain" : [
+    { x: 272, y: 2539, w: 150, h: 150, target: "pleasant-valley" },
+    { x: 2736, y: 1891, w: 150, h: 150, target: "ash-canyon" },
+    { x: 2561, y: 645, w: 150, h: 150, target: "ash-canyon" },
+    { x: 260, y: 843, w: 150, h: 150, target: "blackrock" },
+  ],
+  "ash-canyon" : [
+    { x: 2801, y: 2971, w: 150, h: 150, target: "timberwolf-mountain" },
+    { x: 1210, y: 2942, w: 150, h: 150, target: "timberwolf-mountain" },
+  ],
+  "mountain-town" : [
+    { x: 313, y: 3319, w: 150, h: 150, target: "forlorn-muskeg" },
+    { x: 2410, y: 2272, w: 150, h: 150, target: "mystery-lake" },
+    { x: 1636, y: 202, w: 150, h: 150, target: "hushed-river-valley" },
+  ],
+  "hushed-river-valley" : [
+    { x: 695, y: 2557, w: 150, h: 150, target: "mountain-town" },
+  ]
+}
+
 // ─── Difficulty ───────────────────────────────────────────────────────────────
 
 function setCategory(difficulty) {
@@ -95,14 +170,21 @@ function showMap(mapId) {
   }
 }
 
-function loadMap(mapId) {
+function loadMap(mapId, updateHistory = true) {
+  currentMapId = mapId; 
   document.querySelectorAll('.highlight-overlay').forEach((el) => el.remove());
   showMap(mapId);
   document.getElementById('start-map-image').style.display = 'none';
   document.querySelector('#images-wrapper').style.display = 'block';
+
+  // Adds the map to the browser history
+  if (updateHistory) {
+    window.history.pushState({ mapId: mapId }, '', `#${mapId}`);
+  }
 }
 
-function showStartMap() {
+function showStartMap(updateHistory = true) {
+  currentMapId = null; 
   document.getElementById('start-map-image').style.display = 'block';
   document.querySelectorAll('.image-container').forEach((image) => {
     image.classList.remove('active');
@@ -110,9 +192,15 @@ function showStartMap() {
   const img = document.querySelector('#map-image img');
   if (img) img.src = '';
   resetTransform();
+
+  // Clears the hash from the URL and adds to history
+  if (updateHistory) {
+    window.history.pushState({ mapId: 'home' }, '', window.location.pathname + window.location.search);
+  }
 }
 
-document.getElementById('homeButton').addEventListener('click', showStartMap);
+// ... manter o eventListener do botão home ...
+document.getElementById('homeButton').addEventListener('click', () => showStartMap());
 
 // ─── Drag (mouse) ─────────────────────────────────────────────────────────────
 
@@ -259,11 +347,90 @@ document.addEventListener('DOMContentLoaded', () => {
   }, 1000);
 });
 
-// ─── Init ─────────────────────────────────────────────────────────────────────
+// ─── Init & Browser History ────────────────────────────────────────────────────
 
-window.addEventListener('load', () => {
+window.addEventListener('popstate', (e) => {
+  const hash = window.location.hash.replace('#', '');
+  if (hash) {
+    // Loads the map but tells the function NOT to push to history again
+    loadMap(hash, false);
+  } else {
+    // If there is no hash, go back to the home screen
+    showStartMap(false);
+  }
+});
+
+// Initialization
+window.addEventListener('load', async () => { // Note the 'async' here
   scaleMapAreas();
-  updateMaps();
+  await updateMaps(); // Wait for the maps to load first
+  
+  // Check if the user entered the site with a hash link (e.g., /#mystery-lake)
+  const hash = window.location.hash.replace('#', '');
+  if (hash && maps[hash]) {
+    loadMap(hash, false);
+  }
 });
 
 window.addEventListener('resize', scaleMapAreas);
+
+// ─── Passage Click Coordinates Logic ──────────────────────────────────────────
+
+const mapContainer = document.querySelector('#map-image'); // Fix: Attach events to the container
+let clickStartX = 0;
+let clickStartY = 0;
+
+mapContainer.addEventListener('mousedown', (e) => {
+  clickStartX = e.clientX;
+  clickStartY = e.clientY;
+});
+
+mapContainer.addEventListener('mouseup', (e) => {
+  if (!currentMapId) return;
+
+  const moveX = Math.abs(e.clientX - clickStartX);
+  const moveY = Math.abs(e.clientY - clickStartY);
+  if (moveX > 5 || moveY > 5) return; // User was panning, not clicking
+
+  const transitions = mapTransitions[currentMapId];
+  if (!transitions) return;
+
+  const regionImage = mapContainer.querySelector('img');
+  const rect = regionImage.getBoundingClientRect();
+  const scaleX = rect.width / regionImage.naturalWidth;
+  const scaleY = rect.height / regionImage.naturalHeight;
+  const clickX = (e.clientX - rect.left) / scaleX;
+  const clickY = (e.clientY - rect.top) / scaleY;
+
+  for (const t of transitions) {
+    if (
+      clickX >= t.x && clickX <= t.x + t.w &&
+      clickY >= t.y && clickY <= t.y + t.h
+    ) {
+      console.log(`Transition detected! Loading: ${t.target}`);
+      loadMap(t.target);
+      break;
+    }
+  }
+});
+
+// ─── Devoloper tools: Right-click on the red passage in the map ───────────────
+mapContainer.addEventListener('contextmenu', (e) => {
+  e.preventDefault(); // Prevents the default browser context menu
+  if (!currentMapId) return;
+
+  const regionImage = mapContainer.querySelector('img');
+  const rect = regionImage.getBoundingClientRect();
+  const scaleX = rect.width / regionImage.naturalWidth;
+  const scaleY = rect.height / regionImage.naturalHeight;
+  
+  const clickX = Math.round((e.clientX - rect.left) / scaleX);
+  const clickY = Math.round((e.clientY - rect.top) / scaleY);
+
+  // Considers a 150x150 pixel "target" centered on where you clicked
+  const targetObj = `{ x: ${clickX - 75}, y: ${clickY - 75}, w: 150, h: 150, target: "MAP_NAME" },`;
+  
+  console.log("Copy the code below and paste it into your mapTransitions:");
+  console.log(targetObj);
+  alert("Code generated in the Browser Console (F12)!");
+});

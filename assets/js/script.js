@@ -33,6 +33,133 @@ async function updateMaps() {
   }
 }
 
+// ─── Passage Coordinates ──────────────────────────────────────────────────────
+
+let currentMapId = null;
+
+const mapTransitions = {
+  "mystery-lake": [
+    { x: 1933, y: 4230, w: 150, h: 150, target: "forlorn-muskeg" },
+    { x: 667, y: 4160, w: 150, h: 150, target: "mountain-town" },
+    { x: 3823, y: 1202, w: 150, h: 150, target: "winding-river-&-carter-hydro-dam" },
+    { x: 3980, y: 1427, w: 150, h: 150, target: "ravine" },
+  ],
+  "forlorn-muskeg": [
+    { x: 2974, y: 1646, w: 150, h: 150, target: "mystery-lake" },
+    { x: 176, y: 2037, w: 150, h: 150, target: "broken-railroad" },
+    { x: 701, y: 923, w: 150, h: 150, target: "mountain-town" },
+    { x: 2399, y: 3329, w: 150, h: 150, target: "bleak-inlet" },
+  ],
+  "ravine": [
+    { x: 104, y: 916, w: 150, h: 150, target: "mystery-lake" },
+    { x: 1210, y: 1120, w: 150, h: 150, target: "bleak-inlet" },
+    { x: 2088, y: 894, w: 150, h: 150, target: "coastal-highway" },
+  ],
+  "winding-river-&-carter-hydro-dam": [
+    { x: 1806, y: 2987, w: 150, h: 150, target: "mystery-lake" },
+    { x: 2699, y: 1655, w: 150, h: 150, target: "mystery-lake" },
+    { x: 3194, y: 593, w: 150, h: 150, target: "pleasant-valley" },
+  ],
+  "pleasant-valley": [
+    { x: 1159, y: 3798, w: 150, h: 150, target: "winding-river-&-carter-hydro-dam" },
+    { x: 4307, y: 3783, w: 150, h: 150, target: "coastal-highway" },
+    { x: 3928, y: 51, w: 150, h: 150, target: "timberwolf-mountain" },
+    { x: 229, 
+      y: 2105, 
+      w: 150, 
+      h: 150, 
+      targets: [
+        { name: "Keeper's Pass", id: "keepers-pass" },
+        { name: "Blackrock", id: "blackrock" }
+      ]
+    },
+  ],
+  "coastal-highway": [
+    { x: 321, y: 271, w: 150, h: 150, target: "ravine" },
+    { x: 2042, y: 58, w: 150, h: 150, target: "pleasant-valley" },
+    { x: 3175, y: 2846, w: 150, h: 150, target: "crumbling-highway" },
+  ],
+  "crumbling-highway": [
+    { x: 125, y: 895, w: 150, h: 150, target: "coastal-highway" },
+    { x: 1617, y: 722, w: 150, h: 150, target: "desolation-point" },
+  ],
+  "desolation-point": [
+    { x: 133, y: 976, w: 150, h: 150, target: "crumbling-highway" },
+  ],
+  "bleak-inlet": [
+    { x: 2336, y: 658, w: 150, h: 150, target: "ravine" },
+    { x: 1601, y: 793, w: 150, h: 150, target: "forlorn-muskeg" },
+  ],
+  "keepers-pass": [
+    { x: 995, y: 1626, w: 150, h: 150, target: "pleasant-valley" },
+    { x: 1562, y: 364, w: 150, h: 150, target: "blackrock" },
+  ],
+  "blackrock": [
+    { x: 2935, y: 2173, w: 150, h: 150, target: "timberwolf-mountain" },
+    { x: 1326,
+      y: 3251, 
+      w: 150, 
+      h: 150, 
+      targets: [
+        { name: "Keeper's Pass", id: "keepers-pass" },
+        { name: "Pleasant Valley", id: "pleasant-valley" }
+      ] 
+    }
+  ],
+  "timberwolf-mountain": [
+    { x: 272, y: 2539, w: 150, h: 150, target: "pleasant-valley" },
+    { x: 2736, y: 1891, w: 150, h: 150, target: "ash-canyon" },
+    { x: 2561, y: 645, w: 150, h: 150, target: "ash-canyon" },
+    { x: 260, y: 843, w: 150, h: 150, target: "blackrock" },
+  ],
+  "ash-canyon": [
+    { x: 2801, y: 2971, w: 150, h: 150, target: "timberwolf-mountain" },
+    { x: 1210, y: 2942, w: 150, h: 150, target: "timberwolf-mountain" },
+  ],
+  "mountain-town": [
+    { x: 313, y: 3319, w: 150, h: 150, target: "forlorn-muskeg" },
+    { x: 2410, y: 2272, w: 150, h: 150, target: "mystery-lake" },
+    { x: 1636, y: 202, w: 150, h: 150, target: "hushed-river-valley" },
+  ],
+  "hushed-river-valley": [
+    { x: 695, y: 2557, w: 150, h: 150, target: "mountain-town" },
+  ],
+  "broken-railroad": [
+    { x: 2208, y: 1341, w: 150, h: 150, target: "forlorn-muskeg" },
+    { x: 130, y: 1531, w: 150, h: 150, target: "far-range-branch-line" },
+  ],
+  "far-range-branch-line": [
+    { x: 2850, y: 331, w: 150, h: 150, target: "broken-railroad" },
+    { x: 156, y: 728, w: 150, h: 150, target: "transfer-pass" },
+  ],
+  "transfer-pass": [
+    { x: 1500, y: 1878, w: 150, h: 150, target: "far-range-branch-line" },
+    { x: 815, y: 1016, w: 150, h: 150, target: "forsaken-airfield" },
+    { x: 1580, y: 142, w: 150, h: 150, target: "zone-of-contamination" },
+    { x: 568, y: 139, w: 150, h: 150, target: "sundered-pass" },
+  ],
+  "zone-of-contamination": [
+    { x: 1247, y: 2797, w: 150, h: 150, target: "forsaken-airfield" },
+    { x: 2871, y: 2631, w: 150, h: 150, target: "transfer-pass" },
+    { x: 294, y: 1664, w: 150, h: 150, target: "langston-mine" },
+    { x: 1066, y: 1330, w: 150, h: 150, target: "langston-mine" },
+    { x: 922, y: 1080, w: 150, h: 150, target: "langston-mine" }
+  ],
+  "sundered-pass": [
+    { x: 1387, y: 4244, w: 150, h: 150, target: "transfer-pass" },
+    { x: 506, y: 2898, w: 150, h: 150, target: "forsaken-airfield" },
+  ],
+  "forsaken-airfield": [
+    { x: 3084, y: 4186, w: 150, h: 150, target: "transfer-pass" },
+    { x: 4463, y: 2045, w: 150, h: 150, target: "sundered-pass" },
+  ],
+  "langston-mine": [
+    { x: -25, y: 974, w: 150, h: 150, target: "zone-of-contamination" },
+    { x: 571, y: 89, w: 150, h: 150, target: "zone-of-contamination" },
+    { x: 1785, y: 1108, w: 150, h: 150, target: "zone-of-contamination" },
+  ],
+}
+
 // ─── Difficulty ───────────────────────────────────────────────────────────────
 
 function setCategory(difficulty) {
@@ -95,14 +222,21 @@ function showMap(mapId) {
   }
 }
 
-function loadMap(mapId) {
+function loadMap(mapId, updateHistory = true) {
+  currentMapId = mapId;
   document.querySelectorAll('.highlight-overlay').forEach((el) => el.remove());
   showMap(mapId);
   document.getElementById('start-map-image').style.display = 'none';
   document.querySelector('#images-wrapper').style.display = 'block';
+
+  // Adds the map to the browser history
+  if (updateHistory) {
+    window.history.pushState({ mapId: mapId }, '', `#${mapId}`);
+  }
 }
 
-function showStartMap() {
+function showStartMap(updateHistory = true) {
+  currentMapId = null;
   document.getElementById('start-map-image').style.display = 'block';
   document.querySelectorAll('.image-container').forEach((image) => {
     image.classList.remove('active');
@@ -110,9 +244,14 @@ function showStartMap() {
   const img = document.querySelector('#map-image img');
   if (img) img.src = '';
   resetTransform();
+
+  // Clears the hash from the URL and adds to history
+  if (updateHistory) {
+    window.history.pushState({ mapId: 'home' }, '', window.location.pathname + window.location.search);
+  }
 }
 
-document.getElementById('homeButton').addEventListener('click', showStartMap);
+document.getElementById('homeButton').addEventListener('click', () => showStartMap());
 
 // ─── Drag (mouse) ─────────────────────────────────────────────────────────────
 
@@ -259,11 +398,160 @@ document.addEventListener('DOMContentLoaded', () => {
   }, 1000);
 });
 
-// ─── Init ─────────────────────────────────────────────────────────────────────
+// ─── Init & Browser History ────────────────────────────────────────────────────
 
-window.addEventListener('load', () => {
+window.addEventListener('popstate', (e) => {
+  const hash = window.location.hash.replace('#', '');
+  if (hash) {
+    // Loads the map but tells the function NOT to push to history again
+    loadMap(hash, false);
+  } else {
+    // If there is no hash, go back to the home screen
+    showStartMap(false);
+  }
+});
+
+// Initialization
+window.addEventListener('load', async () => { // Note the 'async' here
   scaleMapAreas();
-  updateMaps();
+  await updateMaps(); // Wait for the maps to load first
+  
+  // Check if the user entered the site with a hash link (e.g., /#mystery-lake)
+  const hash = window.location.hash.replace('#', '');
+  if (hash && maps[hash]) {
+    loadMap(hash, false);
+  }
 });
 
 window.addEventListener('resize', scaleMapAreas);
+
+// ─── Passage Click Coordinates Logic ──────────────────────────────────────────
+
+const transitionMenu = document.createElement('div');
+transitionMenu.className = 'transition-popup';
+transitionMenu.style.display = 'none';
+document.body.appendChild(transitionMenu);
+
+// Hide the menu if clicking outside of it
+document.addEventListener('mousedown', (e) => {
+  if (!transitionMenu.contains(e.target)) {
+    transitionMenu.style.display = 'none';
+  }
+});
+
+// --- Passage Click Coordinates Logic ---
+const mapContainer = document.querySelector('#map-image');
+let clickStartX = 0;
+let clickStartY = 0;
+
+mapContainer.addEventListener('mousedown', (e) => {
+  clickStartX = e.clientX;
+  clickStartY = e.clientY;
+});
+
+mapContainer.addEventListener('mouseup', (e) => {
+  if (!currentMapId) return;
+
+  const moveX = Math.abs(e.clientX - clickStartX);
+  const moveY = Math.abs(e.clientY - clickStartY);
+  if (moveX > 5 || moveY > 5) return; // User was panning, not clicking
+
+  const transitions = mapTransitions[currentMapId];
+  if (!transitions) return;
+
+  const regionImage = mapContainer.querySelector('img');
+  const rect = regionImage.getBoundingClientRect();
+  const scaleX = rect.width / regionImage.naturalWidth;
+  const scaleY = rect.height / regionImage.naturalHeight;
+  const clickX = (e.clientX - rect.left) / scaleX;
+  const clickY = (e.clientY - rect.top) / scaleY;
+
+  for (const t of transitions) {
+    if (
+      clickX >= t.x && clickX <= t.x + t.w &&
+      clickY >= t.y && clickY <= t.y + t.h
+    ) {
+      // IF MULTIPLE DESTINATIONS (Floating Menu)
+      if (t.targets) {
+        transitionMenu.innerHTML = ''; // Clear old buttons
+        transitionMenu.style.left = `${e.clientX}px`;
+        transitionMenu.style.top = `${e.clientY}px`;
+        transitionMenu.style.display = 'flex';
+
+        t.targets.forEach(dest => {
+          const btn = document.createElement('button');
+          btn.innerText = `To ${dest.name}`;
+          btn.onclick = () => {
+            transitionMenu.style.display = 'none';
+            loadMap(dest.id);
+          };
+          transitionMenu.appendChild(btn);
+        });
+      }
+      // IF SINGLE DESTINATION (Direct Map Load)
+      else if (t.target) {
+        console.log(`Transition detected! Loading: ${t.target}`);
+        loadMap(t.target);
+      }
+      break;
+    }
+  }
+});
+
+// ─── Hover effect logic (cursor to pointer) ───────────────────────────────────
+mapContainer.addEventListener('mousemove', (e) => {
+  if (dragging || !currentMapId) {
+    mapContainer.style.cursor = '';
+    return;
+  }
+
+  const transitions = mapTransitions[currentMapId];
+  if (!transitions) {
+    mapContainer.style.cursor = '';
+    return;
+  }
+
+  const regionImage = mapContainer.querySelector('img');
+  const rect = regionImage.getBoundingClientRect();
+  const scaleX = rect.width / regionImage.naturalWidth;
+  const scaleY = rect.height / regionImage.naturalHeight;
+
+  const hoverX = (e.clientX - rect.left) / scaleX;
+  const hoverY = (e.clientY - rect.top) / scaleY;
+
+  let isHovering = false;
+  
+  for (const t of transitions) {
+    if (
+      hoverX >= t.x && hoverX <= t.x + t.w &&
+      hoverY >= t.y && hoverY <= t.y + t.h
+    ) {
+      isHovering = true;
+      break;
+    }
+  }
+
+  mapContainer.style.cursor = isHovering ? 'pointer' : '';
+});
+
+
+// ─── Devoloper tools: Right-click on the red passage in the map ───────────────
+// mapContainer.addEventListener('contextmenu', (e) => {
+//   e.preventDefault(); // Prevents the default browser context menu
+//   if (!currentMapId) return;
+
+//   const regionImage = mapContainer.querySelector('img');
+//   const rect = regionImage.getBoundingClientRect();
+//   const scaleX = rect.width / regionImage.naturalWidth;
+//   const scaleY = rect.height / regionImage.naturalHeight;
+  
+//   const clickX = Math.round((e.clientX - rect.left) / scaleX);
+//   const clickY = Math.round((e.clientY - rect.top) / scaleY);
+
+//   // Considers a 150x150 pixel "target" centered on where you clicked
+//   const targetObj = `{ x: ${clickX - 75}, y: ${clickY - 75}, w: 150, h: 150, target: "MAP_NAME" },`;
+  
+//   console.log("Copy the code below and paste it into your mapTransitions:");
+//   console.log(targetObj);
+//   alert("Code generated in the Browser Console (F12)!");
+// });

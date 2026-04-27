@@ -141,6 +141,9 @@ const mapTransitions = {
   "zone-of-contamination" : [
     { x: 1247, y: 2797, w: 150, h: 150, target: "forsaken-airfield" },
     { x: 2871, y: 2631, w: 150, h: 150, target: "transfer-pass" },
+    { x: 294, y: 1664, w: 150, h: 150, target: "langston-mine" },
+    { x: 1066, y: 1330, w: 150, h: 150, target: "langston-mine" },
+    { x: 922, y: 1080, w: 150, h: 150, target: "langston-mine" }
   ],
   "sundered-pass" : [
     { x: 1387, y: 4244, w: 150, h: 150, target: "transfer-pass" },
@@ -149,8 +152,12 @@ const mapTransitions = {
   "forsaken-airfield" : [
     { x: 3084, y: 4186, w: 150, h: 150, target: "transfer-pass" },
     { x: 4463, y: 2045, w: 150, h: 150, target: "sundered-pass" },
-  ]
-
+  ],
+  "langston-mine" : [
+    { x: -25, y: 974, w: 150, h: 150, target: "zone-of-contamination" },
+    { x: 571, y: 89, w: 150, h: 150, target: "zone-of-contamination" },
+    { x: 1785, y: 1108, w: 150, h: 150, target: "zone-of-contamination" },
+  ],
 }
 
 // ─── Difficulty ───────────────────────────────────────────────────────────────
@@ -244,7 +251,6 @@ function showStartMap(updateHistory = true) {
   }
 }
 
-// ... manter o eventListener do botão home ...
 document.getElementById('homeButton').addEventListener('click', () => showStartMap());
 
 // ─── Drag (mouse) ─────────────────────────────────────────────────────────────
@@ -510,7 +516,6 @@ mapContainer.addEventListener('mousemove', (e) => {
   const scaleX = rect.width / regionImage.naturalWidth;
   const scaleY = rect.height / regionImage.naturalHeight;
 
-  // Calcula onde o mouse está na imagem original
   const hoverX = (e.clientX - rect.left) / scaleX;
   const hoverY = (e.clientY - rect.top) / scaleY;
 

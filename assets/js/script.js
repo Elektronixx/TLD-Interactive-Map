@@ -35,7 +35,7 @@ async function updateMaps() {
 
 // ─── Passage Coordinates ──────────────────────────────────────────────────────
 
-let currentMapid = null;
+let currentMapId = null;
 
 const mapTransitions = {
   "mystery-lake": [
@@ -50,17 +50,17 @@ const mapTransitions = {
     { x: 701, y: 923, w: 150, h: 150, target: "mountain-town" },
     { x: 2399, y: 3329, w: 150, h: 150, target: "bleak-inlet" },
   ],
-  "ravine" : [
+  "ravine": [
     { x: 104, y: 916, w: 150, h: 150, target: "mystery-lake" },
     { x: 1210, y: 1120, w: 150, h: 150, target: "bleak-inlet" },
     { x: 2088, y: 894, w: 150, h: 150, target: "coastal-highway" },
   ],
-  "winding-river-&-carter-hydro-dam" : [
+  "winding-river-&-carter-hydro-dam": [
     { x: 1806, y: 2987, w: 150, h: 150, target: "mystery-lake" },
     { x: 2699, y: 1655, w: 150, h: 150, target: "mystery-lake" },
     { x: 3194, y: 593, w: 150, h: 150, target: "pleasant-valley" },
   ],
-  "pleasant-valley" : [
+  "pleasant-valley": [
     { x: 1159, y: 3798, w: 150, h: 150, target: "winding-river-&-carter-hydro-dam" },
     { x: 4307, y: 3783, w: 150, h: 150, target: "coastal-highway" },
     { x: 3928, y: 51, w: 150, h: 150, target: "timberwolf-mountain" },
@@ -68,92 +68,92 @@ const mapTransitions = {
       y: 2105, 
       w: 150, 
       h: 150, 
-      targets : [
+      targets: [
         { name: "Keeper's Pass", id: "keepers-pass" },
         { name: "Blackrock", id: "blackrock" }
       ]
     },
   ],
-  "coastal-highway" : [
+  "coastal-highway": [
     { x: 321, y: 271, w: 150, h: 150, target: "ravine" },
     { x: 2042, y: 58, w: 150, h: 150, target: "pleasant-valley" },
     { x: 3175, y: 2846, w: 150, h: 150, target: "crumbling-highway" },
   ],
-  "crumbling-highway" : [
+  "crumbling-highway": [
     { x: 125, y: 895, w: 150, h: 150, target: "coastal-highway" },
     { x: 1617, y: 722, w: 150, h: 150, target: "desolation-point" },
   ],
-  "desolation-point" : [
+  "desolation-point": [
     { x: 133, y: 976, w: 150, h: 150, target: "crumbling-highway" },
   ],
-  "bleak-inlet" : [
+  "bleak-inlet": [
     { x: 2336, y: 658, w: 150, h: 150, target: "ravine" },
     { x: 1601, y: 793, w: 150, h: 150, target: "forlorn-muskeg" },
   ],
-  "keepers-pass" : [
+  "keepers-pass": [
     { x: 995, y: 1626, w: 150, h: 150, target: "pleasant-valley" },
     { x: 1562, y: 364, w: 150, h: 150, target: "blackrock" },
   ],
-  "blackrock" : [
+  "blackrock": [
     { x: 2935, y: 2173, w: 150, h: 150, target: "timberwolf-mountain" },
     { x: 1326,
       y: 3251, 
       w: 150, 
       h: 150, 
-      targets : [
+      targets: [
         { name: "Keeper's Pass", id: "keepers-pass" },
         { name: "Pleasant Valley", id: "pleasant-valley" }
       ] 
     }
   ],
-  "timberwolf-mountain" : [
+  "timberwolf-mountain": [
     { x: 272, y: 2539, w: 150, h: 150, target: "pleasant-valley" },
     { x: 2736, y: 1891, w: 150, h: 150, target: "ash-canyon" },
     { x: 2561, y: 645, w: 150, h: 150, target: "ash-canyon" },
     { x: 260, y: 843, w: 150, h: 150, target: "blackrock" },
   ],
-  "ash-canyon" : [
+  "ash-canyon": [
     { x: 2801, y: 2971, w: 150, h: 150, target: "timberwolf-mountain" },
     { x: 1210, y: 2942, w: 150, h: 150, target: "timberwolf-mountain" },
   ],
-  "mountain-town" : [
+  "mountain-town": [
     { x: 313, y: 3319, w: 150, h: 150, target: "forlorn-muskeg" },
     { x: 2410, y: 2272, w: 150, h: 150, target: "mystery-lake" },
     { x: 1636, y: 202, w: 150, h: 150, target: "hushed-river-valley" },
   ],
-  "hushed-river-valley" : [
+  "hushed-river-valley": [
     { x: 695, y: 2557, w: 150, h: 150, target: "mountain-town" },
   ],
-  "broken-railroad" : [
+  "broken-railroad": [
     { x: 2208, y: 1341, w: 150, h: 150, target: "forlorn-muskeg" },
     { x: 130, y: 1531, w: 150, h: 150, target: "far-range-branch-line" },
   ],
-  "far-range-branch-line" : [
+  "far-range-branch-line": [
     { x: 2850, y: 331, w: 150, h: 150, target: "broken-railroad" },
     { x: 156, y: 728, w: 150, h: 150, target: "transfer-pass" },
   ],
-  "transfer-pass" : [
+  "transfer-pass": [
     { x: 1500, y: 1878, w: 150, h: 150, target: "far-range-branch-line" },
     { x: 815, y: 1016, w: 150, h: 150, target: "forsaken-airfield" },
     { x: 1580, y: 142, w: 150, h: 150, target: "zone-of-contamination" },
     { x: 568, y: 139, w: 150, h: 150, target: "sundered-pass" },
   ],
-  "zone-of-contamination" : [
+  "zone-of-contamination": [
     { x: 1247, y: 2797, w: 150, h: 150, target: "forsaken-airfield" },
     { x: 2871, y: 2631, w: 150, h: 150, target: "transfer-pass" },
     { x: 294, y: 1664, w: 150, h: 150, target: "langston-mine" },
     { x: 1066, y: 1330, w: 150, h: 150, target: "langston-mine" },
     { x: 922, y: 1080, w: 150, h: 150, target: "langston-mine" }
   ],
-  "sundered-pass" : [
+  "sundered-pass": [
     { x: 1387, y: 4244, w: 150, h: 150, target: "transfer-pass" },
     { x: 506, y: 2898, w: 150, h: 150, target: "forsaken-airfield" },
   ],
-  "forsaken-airfield" : [
+  "forsaken-airfield": [
     { x: 3084, y: 4186, w: 150, h: 150, target: "transfer-pass" },
     { x: 4463, y: 2045, w: 150, h: 150, target: "sundered-pass" },
   ],
-  "langston-mine" : [
+  "langston-mine": [
     { x: -25, y: 974, w: 150, h: 150, target: "zone-of-contamination" },
     { x: 571, y: 89, w: 150, h: 150, target: "zone-of-contamination" },
     { x: 1785, y: 1108, w: 150, h: 150, target: "zone-of-contamination" },
@@ -223,7 +223,7 @@ function showMap(mapId) {
 }
 
 function loadMap(mapId, updateHistory = true) {
-  currentMapId = mapId; 
+  currentMapId = mapId;
   document.querySelectorAll('.highlight-overlay').forEach((el) => el.remove());
   showMap(mapId);
   document.getElementById('start-map-image').style.display = 'none';
@@ -236,7 +236,7 @@ function loadMap(mapId, updateHistory = true) {
 }
 
 function showStartMap(updateHistory = true) {
-  currentMapId = null; 
+  currentMapId = null;
   document.getElementById('start-map-image').style.display = 'block';
   document.querySelectorAll('.image-container').forEach((image) => {
     image.classList.remove('active');
@@ -501,7 +501,7 @@ mapContainer.addEventListener('mouseup', (e) => {
 // ─── Hover effect logic (cursor to pointer) ───────────────────────────────────
 mapContainer.addEventListener('mousemove', (e) => {
   if (dragging || !currentMapId) {
-    mapContainer.style.cursor = ''; 
+    mapContainer.style.cursor = '';
     return;
   }
 

@@ -139,25 +139,57 @@ const mapTransitions = {
     { x: 568, y: 139, w: 150, h: 150, target: "sundered-pass" },
   ],
   "zone-of-contamination": [
-    { x: 1247, y: 2797, w: 150, h: 150, target: "forsaken-airfield" },
     { x: 2871, y: 2631, w: 150, h: 150, target: "transfer-pass" },
     { x: 294, y: 1664, w: 150, h: 150, target: "langston-mine" },
     { x: 1066, y: 1330, w: 150, h: 150, target: "langston-mine" },
-    { x: 922, y: 1080, w: 150, h: 150, target: "langston-mine" }
+    { x: 922, y: 1080, w: 150, h: 150, target: "langston-mine" },
+    { x: 1247,
+      y: 2797,
+      w: 150, 
+      h: 150, 
+      targets: [
+        { name: "Transition Cave", id: "transition-cave" },
+        { name: "Forsaken Airfield", id: "forsaken-airfield" },
+        { name: "Sundered Pass", id: "sundered-pass" },
+      ] 
+    },
   ],
   "sundered-pass": [
     { x: 1387, y: 4244, w: 150, h: 150, target: "transfer-pass" },
-    { x: 506, y: 2898, w: 150, h: 150, target: "forsaken-airfield" },
+    { x: 506, 
+      y: 2898, 
+      w: 150, 
+      h: 150, 
+      targets: [
+        { name: "Transition Cave", id: "transition-cave" },
+        { name: "Forsaken Airfield", id: "forsaken-airfield" },
+        { name: "Zone of Contamination", id: "zone-of-contamination" },
+      ]  
+    },
   ],
   "forsaken-airfield": [
     { x: 3084, y: 4186, w: 150, h: 150, target: "transfer-pass" },
-    { x: 4463, y: 2045, w: 150, h: 150, target: "sundered-pass" },
+    { x: 4463, 
+      y: 2045, 
+      w: 150, 
+      h: 150, 
+      targets: [
+        { name: "Transition Cave", id: "transition-cave" },
+        { name: "Sundered Pass", id: "sundered-pass" },
+        { name: "Zone of Contamination", id: "zone-of-contamination" },
+      ]  
+    },
   ],
   "langston-mine": [
     { x: -25, y: 974, w: 150, h: 150, target: "zone-of-contamination" },
     { x: 571, y: 89, w: 150, h: 150, target: "zone-of-contamination" },
     { x: 1785, y: 1108, w: 150, h: 150, target: "zone-of-contamination" },
   ],
+  "transition-cave": [
+    { x: 92, y: 302, w: 150, h: 150, target: "forsaken-airfield" },
+    { x: 969, y: 1784, w: 150, h: 150, target: "zone-of-contamination" },
+    { x: 1407, y: 727, w: 150, h: 150, target: "sundered-pass" },
+  ]
 }
 
 // ─── Difficulty ───────────────────────────────────────────────────────────────
@@ -536,22 +568,22 @@ mapContainer.addEventListener('mousemove', (e) => {
 
 
 // ─── Devoloper tools: Right-click on the red passage in the map ───────────────
-// mapContainer.addEventListener('contextmenu', (e) => {
-//   e.preventDefault(); // Prevents the default browser context menu
-//   if (!currentMapId) return;
+mapContainer.addEventListener('contextmenu', (e) => {
+  e.preventDefault(); // Prevents the default browser context menu
+  if (!currentMapId) return;
 
-//   const regionImage = mapContainer.querySelector('img');
-//   const rect = regionImage.getBoundingClientRect();
-//   const scaleX = rect.width / regionImage.naturalWidth;
-//   const scaleY = rect.height / regionImage.naturalHeight;
+  const regionImage = mapContainer.querySelector('img');
+  const rect = regionImage.getBoundingClientRect();
+  const scaleX = rect.width / regionImage.naturalWidth;
+  const scaleY = rect.height / regionImage.naturalHeight;
   
-//   const clickX = Math.round((e.clientX - rect.left) / scaleX);
-//   const clickY = Math.round((e.clientY - rect.top) / scaleY);
+  const clickX = Math.round((e.clientX - rect.left) / scaleX);
+  const clickY = Math.round((e.clientY - rect.top) / scaleY);
 
-//   // Considers a 150x150 pixel "target" centered on where you clicked
-//   const targetObj = `{ x: ${clickX - 75}, y: ${clickY - 75}, w: 150, h: 150, target: "MAP_NAME" },`;
+  // Considers a 150x150 pixel "target" centered on where you clicked
+  const targetObj = `{ x: ${clickX - 75}, y: ${clickY - 75}, w: 150, h: 150, target: "MAP_NAME" },`;
   
-//   console.log("Copy the code below and paste it into your mapTransitions:");
-//   console.log(targetObj);
-//   alert("Code generated in the Browser Console (F12)!");
-// });
+  console.log("Copy the code below and paste it into your mapTransitions:");
+  console.log(targetObj);
+  alert("Code generated in the Browser Console (F12)!");
+});

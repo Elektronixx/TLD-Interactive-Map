@@ -139,25 +139,57 @@ const mapTransitions = {
     { x: 568, y: 139, w: 150, h: 150, target: "sundered-pass" },
   ],
   "zone-of-contamination": [
-    { x: 1247, y: 2797, w: 150, h: 150, target: "forsaken-airfield" },
     { x: 2871, y: 2631, w: 150, h: 150, target: "transfer-pass" },
     { x: 294, y: 1664, w: 150, h: 150, target: "langston-mine" },
     { x: 1066, y: 1330, w: 150, h: 150, target: "langston-mine" },
-    { x: 922, y: 1080, w: 150, h: 150, target: "langston-mine" }
+    { x: 922, y: 1080, w: 150, h: 150, target: "langston-mine" },
+    { x: 1247,
+      y: 2797,
+      w: 150, 
+      h: 150, 
+      targets: [
+        { name: "Transition Cave", id: "transition-cave" },
+        { name: "Forsaken Airfield", id: "forsaken-airfield" },
+        { name: "Sundered Pass", id: "sundered-pass" },
+      ] 
+    },
   ],
   "sundered-pass": [
     { x: 1387, y: 4244, w: 150, h: 150, target: "transfer-pass" },
-    { x: 506, y: 2898, w: 150, h: 150, target: "forsaken-airfield" },
+    { x: 506, 
+      y: 2898, 
+      w: 150, 
+      h: 150, 
+      targets: [
+        { name: "Transition Cave", id: "transition-cave" },
+        { name: "Forsaken Airfield", id: "forsaken-airfield" },
+        { name: "Zone of Contamination", id: "zone-of-contamination" },
+      ]  
+    },
   ],
   "forsaken-airfield": [
     { x: 3084, y: 4186, w: 150, h: 150, target: "transfer-pass" },
-    { x: 4463, y: 2045, w: 150, h: 150, target: "sundered-pass" },
+    { x: 4463, 
+      y: 2045, 
+      w: 150, 
+      h: 150, 
+      targets: [
+        { name: "Transition Cave", id: "transition-cave" },
+        { name: "Sundered Pass", id: "sundered-pass" },
+        { name: "Zone of Contamination", id: "zone-of-contamination" },
+      ]  
+    },
   ],
   "langston-mine": [
     { x: -25, y: 974, w: 150, h: 150, target: "zone-of-contamination" },
     { x: 571, y: 89, w: 150, h: 150, target: "zone-of-contamination" },
     { x: 1785, y: 1108, w: 150, h: 150, target: "zone-of-contamination" },
   ],
+  "transition-cave": [
+    { x: 92, y: 302, w: 150, h: 150, target: "forsaken-airfield" },
+    { x: 969, y: 1784, w: 150, h: 150, target: "zone-of-contamination" },
+    { x: 1407, y: 727, w: 150, h: 150, target: "sundered-pass" },
+  ]
 }
 
 // ─── Difficulty ───────────────────────────────────────────────────────────────

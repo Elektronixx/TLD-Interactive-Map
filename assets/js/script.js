@@ -568,22 +568,22 @@ mapContainer.addEventListener('mousemove', (e) => {
 
 
 // ─── Devoloper tools: Right-click on the red passage in the map ───────────────
-mapContainer.addEventListener('contextmenu', (e) => {
-  e.preventDefault(); // Prevents the default browser context menu
-  if (!currentMapId) return;
+// mapContainer.addEventListener('contextmenu', (e) => {
+//   e.preventDefault(); // Prevents the default browser context menu
+//   if (!currentMapId) return;
 
-  const regionImage = mapContainer.querySelector('img');
-  const rect = regionImage.getBoundingClientRect();
-  const scaleX = rect.width / regionImage.naturalWidth;
-  const scaleY = rect.height / regionImage.naturalHeight;
+//   const regionImage = mapContainer.querySelector('img');
+//   const rect = regionImage.getBoundingClientRect();
+//   const scaleX = rect.width / regionImage.naturalWidth;
+//   const scaleY = rect.height / regionImage.naturalHeight;
   
-  const clickX = Math.round((e.clientX - rect.left) / scaleX);
-  const clickY = Math.round((e.clientY - rect.top) / scaleY);
+//   const clickX = Math.round((e.clientX - rect.left) / scaleX);
+//   const clickY = Math.round((e.clientY - rect.top) / scaleY);
 
-  // Considers a 150x150 pixel "target" centered on where you clicked
-  const targetObj = `{ x: ${clickX - 75}, y: ${clickY - 75}, w: 150, h: 150, target: "MAP_NAME" },`;
+//   // Considers a 150x150 pixel "target" centered on where you clicked
+//   const targetObj = `{ x: ${clickX - 75}, y: ${clickY - 75}, w: 150, h: 150, target: "MAP_NAME" },`;
   
-  console.log("Copy the code below and paste it into your mapTransitions:");
-  console.log(targetObj);
-  alert("Code generated in the Browser Console (F12)!");
-});
+//   console.log("Copy the code below and paste it into your mapTransitions:");
+//   console.log(targetObj);
+//   alert("Code generated in the Browser Console (F12)!");
+// });

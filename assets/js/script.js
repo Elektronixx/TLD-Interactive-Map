@@ -9,8 +9,8 @@ let dragStartX = 0, dragStartY = 0;
 let dragStartPanX = 0, dragStartPanY = 0;
 
 function applyTransform() {
-  const img = document.querySelector('#map-image img');
-  if (img) img.style.transform = `translate(${panX}px, ${panY}px) scale(${zoomLevel})`;
+  const stage = document.getElementById('map-stage');
+  if (stage) stage.style.transform = `translate(${panX}px, ${panY}px) scale(${zoomLevel})`;
 }
 
 function resetTransform() {
@@ -18,9 +18,639 @@ function resetTransform() {
   applyTransform();
 }
 
+// ─── Local map annotations ───────────────────────────────────────────────────
+
+const ANNOTATION_STORAGE_KEY = 'tld-map-annotations-v1';
+const FOG_CANVAS_MAX_DIMENSION = 1400;
+const FOG_REFERENCE_MAP_METERS = 2500;
+const FOG_COLOR = '#05080a';
+const SVG_NAMESPACE = 'http://www.w3.org/2000/svg';
+
+let activeTool = 'pan';
+let fogDrawing = false;
+let fogPointerId = null;
+let lastFogPoint = null;
+let pendingRoutePoints = [];
+let routePointerPoint = null;
+let annotationStatusTimer = null;
+
+function createDefaultAnnotationState() {
+  return {
+    version: 2,
+    settings: {
+      fogEnabled: false,
+      brushSize: 80,
+      fogBrushMode: 'reveal',
+      shapeKind: 'circle',
+      shapeSize: 8,
+      shapeColor: '#ef5350',
+      routeColor: '#ffb347',
+    },
+    maps: {},
+  };
+}
+
+function loadAnnotationState() {
+  const defaults = createDefaultAnnotationState();
+
+  try {
+    const saved = JSON.parse(localStorage.getItem(ANNOTATION_STORAGE_KEY));
+    if (!saved || typeof saved !== 'object') return defaults;
+
+    return {
+      version: 2,
+      settings: {
+        ...defaults.settings,
+        ...(saved.settings && typeof saved.settings === 'object' ? saved.settings : {}),
+      },
+      maps: saved.maps && typeof saved.maps === 'object' ? saved.maps : {},
+    };
+  } catch (error) {
+    console.warn('Unable to read locally saved annotations:', error);
+    return defaults;
+  }
+}
+
+let annotationState = loadAnnotationState();
+
+function getMapAnnotations(mapId = currentMapId) {
+  if (!mapId) return null;
+
+  if (!annotationState.maps[mapId]) {
+    annotationState.maps[mapId] = { fog: null, shapes: [], routes: [] };
+  }
+
+  const mapData = annotationState.maps[mapId];
+  if (!Array.isArray(mapData.shapes)) {
+    const legacyMarkers = Array.isArray(mapData.markers) ? mapData.markers : [];
+    mapData.shapes = legacyMarkers.map((marker) => ({
+      id: marker.id || createAnnotationId('shape'),
+      x: marker.x,
+      y: marker.y,
+      shape: 'circle',
+      size: 8,
+      color: '#ef5350',
+      label: marker.label || '',
+    }));
+  }
+  delete mapData.markers;
+  if (!Array.isArray(mapData.routes)) mapData.routes = [];
+  return mapData;
+}
+
+function setAnnotationStatus(message, isError = false) {
+  const status = document.getElementById('annotation-status');
+  if (!status) return;
+
+  window.clearTimeout(annotationStatusTimer);
+  status.textContent = message;
+  status.classList.toggle('error', isError);
+
+  if (message !== 'Saved locally' && !isError) {
+    annotationStatusTimer = window.setTimeout(() => {
+      status.textContent = 'Saved locally';
+    }, 1600);
+  }
+}
+
+function saveAnnotationState() {
+  try {
+    localStorage.setItem(ANNOTATION_STORAGE_KEY, JSON.stringify(annotationState));
+    setAnnotationStatus('Saved');
+    return true;
+  } catch (error) {
+    console.error('Unable to save annotations locally:', error);
+    setAnnotationStatus('Local storage is full', true);
+    return false;
+  }
+}
+
+function createAnnotationId(prefix) {
+  if (window.crypto && window.crypto.randomUUID) {
+    return `${prefix}-${window.crypto.randomUUID()}`;
+  }
+  return `${prefix}-${Date.now()}-${Math.random().toString(16).slice(2)}`;
+}
+
+function isValidColor(value) {
+  return /^#[0-9a-f]{6}$/i.test(value || '');
+}
+
+const SHAPE_KINDS = ['circle', 'square', 'triangle', 'cross'];
+
+function normalizeShapeKind(value) {
+  return SHAPE_KINDS.includes(value) ? value : 'circle';
+}
+
+function normalizeShapeSize(value) {
+  return Math.min(24, Math.max(6, Number(value) || 8));
+}
+
+function clientPointToMap(clientX, clientY) {
+  const img = document.querySelector('#map-image img');
+  if (!img || !img.naturalWidth) return null;
+
+  const rect = img.getBoundingClientRect();
+  if (
+    rect.width <= 0 || rect.height <= 0 ||
+    clientX < rect.left || clientX > rect.right ||
+    clientY < rect.top || clientY > rect.bottom
+  ) {
+    return null;
+  }
+
+  return {
+    x: Math.min(1, Math.max(0, (clientX - rect.left) / rect.width)),
+    y: Math.min(1, Math.max(0, (clientY - rect.top) / rect.height)),
+  };
+}
+
+function setFogVisibility() {
+  const fogCanvas = document.getElementById('fog-canvas');
+  if (fogCanvas) {
+    fogCanvas.classList.toggle('enabled', Boolean(annotationState.settings.fogEnabled));
+  }
+}
+
+function normalizeFogBrushMode(value) {
+  return value === 'restore' ? 'restore' : 'reveal';
+}
+
+function syncFogBrushModeControls() {
+  const mode = normalizeFogBrushMode(annotationState.settings.fogBrushMode);
+  annotationState.settings.fogBrushMode = mode;
+  document.querySelectorAll('[data-fog-mode]').forEach((button) => {
+    const isActive = button.dataset.fogMode === mode;
+    button.classList.toggle('active', isActive);
+    button.setAttribute('aria-pressed', String(isActive));
+  });
+
+  const map = document.getElementById('map-image');
+  if (map) {
+    map.classList.toggle(
+      'fog-restore-active',
+      activeTool === 'fog' && mode === 'restore',
+    );
+  }
+}
+
+function setFogBrushMode(mode) {
+  annotationState.settings.fogBrushMode = normalizeFogBrushMode(mode);
+  syncFogBrushModeControls();
+  saveAnnotationState();
+}
+
+function fillFogCanvas() {
+  const canvas = document.getElementById('fog-canvas');
+  if (!canvas || !canvas.width || !canvas.height) return;
+
+  const context = canvas.getContext('2d');
+  context.globalCompositeOperation = 'source-over';
+  context.clearRect(0, 0, canvas.width, canvas.height);
+  context.fillStyle = FOG_COLOR;
+  context.fillRect(0, 0, canvas.width, canvas.height);
+}
+
+function normalizeFogMaskOpacity(context, canvas) {
+  const imageData = context.getImageData(0, 0, canvas.width, canvas.height);
+  let maximumAlpha = 0;
+  for (let index = 3; index < imageData.data.length; index += 4) {
+    maximumAlpha = Math.max(maximumAlpha, imageData.data[index]);
+  }
+  if (maximumAlpha === 0 || maximumAlpha === 255) return;
+
+  const alphaScale = 255 / maximumAlpha;
+  for (let index = 3; index < imageData.data.length; index += 4) {
+    imageData.data[index] = Math.min(255, Math.round(imageData.data[index] * alphaScale));
+  }
+  context.putImageData(imageData, 0, 0);
+}
+
+function configureFogCanvas() {
+  const img = document.querySelector('#map-image img');
+  const canvas = document.getElementById('fog-canvas');
+  const mapId = currentMapId;
+  if (!img || !img.naturalWidth || !canvas || !mapId) return;
+
+  const resolutionScale = Math.min(
+    1,
+    FOG_CANVAS_MAX_DIMENSION / Math.max(img.naturalWidth, img.naturalHeight),
+  );
+  canvas.width = Math.max(1, Math.round(img.naturalWidth * resolutionScale));
+  canvas.height = Math.max(1, Math.round(img.naturalHeight * resolutionScale));
+  fillFogCanvas();
+  setFogVisibility();
+
+  const savedMapData = getMapAnnotations(mapId);
+  const savedFog = savedMapData && savedMapData.fog;
+  if (!savedFog) return;
+
+  const savedMask = new Image();
+  savedMask.onload = () => {
+    if (currentMapId !== mapId) return;
+    const context = canvas.getContext('2d');
+    context.globalCompositeOperation = 'source-over';
+    context.clearRect(0, 0, canvas.width, canvas.height);
+    context.drawImage(savedMask, 0, 0, canvas.width, canvas.height);
+    normalizeFogMaskOpacity(context, canvas);
+  };
+  savedMask.onerror = () => {
+    console.warn(`Unable to restore fog data for ${mapId}.`);
+    fillFogCanvas();
+  };
+  savedMask.src = savedFog;
+}
+
+function saveCurrentFog() {
+  const canvas = document.getElementById('fog-canvas');
+  const mapData = getMapAnnotations();
+  if (!canvas || !mapData) return;
+
+  try {
+    mapData.fog = canvas.toDataURL('image/png');
+    saveAnnotationState();
+  } catch (error) {
+    console.error('Unable to serialize fog data:', error);
+    setAnnotationStatus('Could not save fog', true);
+  }
+}
+
+function fogBrushDiameterFraction() {
+  const brushSize = Number(annotationState.settings.brushSize) || 80;
+  return brushSize / FOG_REFERENCE_MAP_METERS;
+}
+
+function applyFogBrushAtPoint(point, previousPoint = null) {
+  const canvas = document.getElementById('fog-canvas');
+  if (!canvas || !canvas.width || !point) return;
+
+  const context = canvas.getContext('2d');
+  const radius = Math.max(
+    2,
+    (fogBrushDiameterFraction() * Math.min(canvas.width, canvas.height)) / 2,
+  );
+  const end = { x: point.x * canvas.width, y: point.y * canvas.height };
+  const start = previousPoint
+    ? { x: previousPoint.x * canvas.width, y: previousPoint.y * canvas.height }
+    : end;
+  const distance = Math.hypot(end.x - start.x, end.y - start.y);
+  const steps = Math.max(1, Math.ceil(distance / Math.max(1, radius * 0.45)));
+  const brushMode = normalizeFogBrushMode(annotationState.settings.fogBrushMode);
+
+  context.save();
+  context.globalCompositeOperation = brushMode === 'restore' ? 'source-over' : 'destination-out';
+  context.fillStyle = brushMode === 'restore' ? FOG_COLOR : '#000';
+  for (let step = 0; step <= steps; step += 1) {
+    const progress = step / steps;
+    const x = start.x + (end.x - start.x) * progress;
+    const y = start.y + (end.y - start.y) * progress;
+    context.beginPath();
+    context.arc(x, y, radius, 0, Math.PI * 2);
+    context.fill();
+  }
+  context.restore();
+}
+
+function updateBrushPreview(point) {
+  const preview = document.getElementById('brush-preview');
+  const stage = document.getElementById('map-stage');
+  if (!preview || !stage || !point) {
+    if (preview) preview.style.opacity = '0';
+    return;
+  }
+
+  const diameter = fogBrushDiameterFraction() * Math.min(stage.clientWidth, stage.clientHeight);
+  preview.style.left = `${point.x * 100}%`;
+  preview.style.top = `${point.y * 100}%`;
+  preview.style.width = `${Math.max(4, diameter)}px`;
+  preview.style.height = `${Math.max(4, diameter)}px`;
+  preview.style.opacity = '1';
+}
+
+function resetCurrentFog() {
+  const mapData = getMapAnnotations();
+  if (!mapData) return;
+  mapData.fog = null;
+  fillFogCanvas();
+  saveAnnotationState();
+}
+
+function createShapeGlyph(shapeKind) {
+  const glyph = document.createElementNS(SVG_NAMESPACE, 'svg');
+  glyph.setAttribute('viewBox', '0 0 24 24');
+  glyph.setAttribute('aria-hidden', 'true');
+  glyph.setAttribute('fill', 'none');
+  glyph.setAttribute('stroke', 'currentColor');
+  glyph.setAttribute('stroke-width', '4');
+  glyph.setAttribute('stroke-linecap', 'round');
+  glyph.setAttribute('stroke-linejoin', 'round');
+  glyph.setAttribute('class', `map-shape__glyph map-shape__glyph--${shapeKind}`);
+
+  if (shapeKind === 'circle') {
+    const circle = document.createElementNS(SVG_NAMESPACE, 'circle');
+    circle.setAttribute('cx', '12');
+    circle.setAttribute('cy', '12');
+    circle.setAttribute('r', '8');
+    glyph.appendChild(circle);
+  } else if (shapeKind === 'square') {
+    const square = document.createElementNS(SVG_NAMESPACE, 'rect');
+    square.setAttribute('x', '4');
+    square.setAttribute('y', '4');
+    square.setAttribute('width', '16');
+    square.setAttribute('height', '16');
+    glyph.appendChild(square);
+  } else if (shapeKind === 'triangle') {
+    const triangle = document.createElementNS(SVG_NAMESPACE, 'path');
+    triangle.setAttribute('d', 'M12 3 L21 20 L3 20 Z');
+    glyph.appendChild(triangle);
+  } else {
+    const descendingLine = document.createElementNS(SVG_NAMESPACE, 'path');
+    descendingLine.setAttribute('d', 'M5 5 L19 19');
+    const ascendingLine = document.createElementNS(SVG_NAMESPACE, 'path');
+    ascendingLine.setAttribute('d', 'M19 5 L5 19');
+    glyph.append(descendingLine, ascendingLine);
+  }
+
+  return glyph;
+}
+
+function renderShapes() {
+  const layer = document.getElementById('shape-layer');
+  const mapData = getMapAnnotations();
+  if (!layer || !mapData) return;
+  layer.replaceChildren();
+
+  mapData.shapes.forEach((shapeData) => {
+    const shapeKind = normalizeShapeKind(shapeData.shape);
+    const shapeSize = normalizeShapeSize(shapeData.size);
+    const shapeColor = isValidColor(shapeData.color) ? shapeData.color : '#ef5350';
+    const shape = document.createElement('button');
+    shape.type = 'button';
+    shape.className = 'map-shape';
+    shape.dataset.shapeId = shapeData.id;
+    shape.style.left = `${shapeData.x * 100}%`;
+    shape.style.top = `${shapeData.y * 100}%`;
+    shape.style.setProperty('--shape-size', `${shapeSize}px`);
+    shape.style.setProperty('--shape-color', shapeColor);
+    shape.title = shapeData.label || `${shapeKind} annotation`;
+    shape.setAttribute('aria-label', shape.title);
+
+    shape.appendChild(createShapeGlyph(shapeKind));
+
+    if (shapeData.label) {
+      const label = document.createElement('span');
+      label.className = 'map-shape__label';
+      label.textContent = shapeData.label;
+      shape.appendChild(label);
+    }
+
+    shape.addEventListener('pointerdown', (event) => {
+      if (event.button !== 0) return;
+      if (activeTool === 'erase') {
+        event.preventDefault();
+        event.stopPropagation();
+        removeShape(shapeData.id);
+      } else if (activeTool === 'route') {
+        event.preventDefault();
+        event.stopPropagation();
+        addRoutePoint({ x: shapeData.x, y: shapeData.y });
+      }
+    });
+    layer.appendChild(shape);
+  });
+}
+
+function addShape(point) {
+  const mapData = getMapAnnotations();
+  if (!mapData || !point) return;
+
+  const selectedShape = document.querySelector('input[name="shape-kind"]:checked');
+  const shapeKind = normalizeShapeKind(selectedShape && selectedShape.value);
+  const shapeSize = normalizeShapeSize(document.getElementById('shape-size').value);
+  const shapeColorInput = document.getElementById('shape-color').value;
+  const shapeColor = isValidColor(shapeColorInput) ? shapeColorInput : '#ef5350';
+  const labelInput = document.getElementById('shape-label');
+  mapData.shapes.push({
+    id: createAnnotationId('shape'),
+    x: point.x,
+    y: point.y,
+    shape: shapeKind,
+    size: shapeSize,
+    color: shapeColor,
+    label: labelInput.value.trim(),
+  });
+  annotationState.settings.shapeKind = shapeKind;
+  annotationState.settings.shapeSize = shapeSize;
+  annotationState.settings.shapeColor = shapeColor;
+  saveAnnotationState();
+  renderShapes();
+}
+
+function removeShape(shapeId) {
+  const mapData = getMapAnnotations();
+  if (!mapData) return;
+  mapData.shapes = mapData.shapes.filter((shape) => shape.id !== shapeId);
+  saveAnnotationState();
+  renderShapes();
+}
+
+function routePointsAttribute(points) {
+  return points.map((point) => `${point.x * 1000},${point.y * 1000}`).join(' ');
+}
+
+function createRoutePolyline(points, color, className) {
+  const polyline = document.createElementNS(SVG_NAMESPACE, 'polyline');
+  polyline.setAttribute('points', routePointsAttribute(points));
+  polyline.setAttribute('stroke', isValidColor(color) ? color : '#ffb347');
+  polyline.setAttribute('stroke-width', '6');
+  polyline.setAttribute('class', className);
+  return polyline;
+}
+
+function renderRoutes() {
+  const layer = document.getElementById('route-layer');
+  const mapData = getMapAnnotations();
+  if (!layer || !mapData) return;
+  layer.replaceChildren();
+
+  mapData.routes.forEach((route) => {
+    if (!Array.isArray(route.points) || route.points.length < 2) return;
+    const polyline = createRoutePolyline(route.points, route.color, 'planned-route');
+    polyline.dataset.routeId = route.id;
+    polyline.addEventListener('pointerdown', (event) => {
+      if (activeTool !== 'erase' || event.button !== 0) return;
+      event.preventDefault();
+      event.stopPropagation();
+      removeRoute(route.id);
+    });
+    layer.appendChild(polyline);
+  });
+
+  if (pendingRoutePoints.length) {
+    const previewPoints = routePointerPoint
+      ? [...pendingRoutePoints, routePointerPoint]
+      : pendingRoutePoints;
+    if (previewPoints.length >= 2) {
+      layer.appendChild(createRoutePolyline(
+        previewPoints,
+        annotationState.settings.routeColor,
+        'route-preview',
+      ));
+    }
+
+    pendingRoutePoints.forEach((point) => {
+      const node = document.createElementNS(SVG_NAMESPACE, 'circle');
+      node.setAttribute('cx', String(point.x * 1000));
+      node.setAttribute('cy', String(point.y * 1000));
+      node.setAttribute('r', '7');
+      node.setAttribute('fill', annotationState.settings.routeColor);
+      node.setAttribute('class', 'route-node');
+      layer.appendChild(node);
+    });
+  }
+}
+
+function updateRouteButtons() {
+  const finishButton = document.getElementById('finish-route');
+  const cancelButton = document.getElementById('cancel-route');
+  if (finishButton) finishButton.disabled = pendingRoutePoints.length < 2;
+  if (cancelButton) cancelButton.disabled = pendingRoutePoints.length === 0;
+}
+
+function addRoutePoint(point) {
+  if (!point) return;
+  pendingRoutePoints.push(point);
+  routePointerPoint = null;
+  updateRouteButtons();
+  renderRoutes();
+}
+
+function finishPendingRoute() {
+  const mapData = getMapAnnotations();
+  if (!mapData || pendingRoutePoints.length < 2) return;
+  mapData.routes.push({
+    id: createAnnotationId('route'),
+    points: pendingRoutePoints.map((point) => ({ ...point })),
+    color: isValidColor(annotationState.settings.routeColor)
+      ? annotationState.settings.routeColor
+      : '#ffb347',
+  });
+  pendingRoutePoints = [];
+  routePointerPoint = null;
+  saveAnnotationState();
+  updateRouteButtons();
+  renderRoutes();
+}
+
+function cancelPendingRoute() {
+  pendingRoutePoints = [];
+  routePointerPoint = null;
+  updateRouteButtons();
+  renderRoutes();
+}
+
+function removeRoute(routeId) {
+  const mapData = getMapAnnotations();
+  if (!mapData) return;
+  mapData.routes = mapData.routes.filter((route) => route.id !== routeId);
+  saveAnnotationState();
+  renderRoutes();
+}
+
+function syncAnnotationLayers() {
+  configureFogCanvas();
+  renderShapes();
+  renderRoutes();
+}
+
+const toolHelp = {
+  pan: 'Drag to pan. Use the mouse wheel or pinch to zoom.',
+  fog: 'Use Reveal to clear explored ground or Restore fog to correct mistakes.',
+  shape: 'Choose a shape, size, and colour, then click the map to place it.',
+  route: 'Click POIs or shapes to add stops, then finish the route. Press Escape to return to Pan.',
+  erase: 'Click a custom shape or route to remove it.',
+};
+
+function setActiveTool(tool) {
+  if (!toolHelp[tool]) return;
+  if (activeTool === 'fog' && tool !== 'fog' && fogDrawing) {
+    finishFogStroke();
+  }
+  if (activeTool === 'route' && tool !== 'route' && pendingRoutePoints.length) {
+    cancelPendingRoute();
+  }
+  activeTool = tool;
+
+  document.querySelectorAll('.tool-button').forEach((button) => {
+    const isActive = button.dataset.tool === tool;
+    button.classList.toggle('active', isActive);
+    button.setAttribute('aria-pressed', String(isActive));
+  });
+  document.querySelectorAll('[data-options-for]').forEach((options) => {
+    options.hidden = options.dataset.optionsFor !== tool;
+  });
+
+  const map = document.getElementById('map-image');
+  if (map) {
+    map.classList.toggle('annotation-active', tool !== 'pan');
+    map.classList.toggle('fog-active', tool === 'fog');
+    map.classList.toggle(
+      'fog-restore-active',
+      tool === 'fog' && normalizeFogBrushMode(annotationState.settings.fogBrushMode) === 'restore',
+    );
+    map.classList.toggle('erase-active', tool === 'erase');
+  }
+  document.getElementById('tool-help').textContent = toolHelp[tool];
+
+  if (tool !== 'fog') updateBrushPreview(null);
+  if (tool !== 'route') routePointerPoint = null;
+  renderRoutes();
+}
+
+function syncAnnotationControls() {
+  const brushSize = Math.min(200, Math.max(20, Number(annotationState.settings.brushSize) || 80));
+  const fogBrushMode = normalizeFogBrushMode(annotationState.settings.fogBrushMode);
+  const shapeKind = normalizeShapeKind(annotationState.settings.shapeKind);
+  const shapeSize = normalizeShapeSize(annotationState.settings.shapeSize);
+  const shapeColor = isValidColor(annotationState.settings.shapeColor)
+    ? annotationState.settings.shapeColor
+    : '#ef5350';
+  const routeColor = isValidColor(annotationState.settings.routeColor)
+    ? annotationState.settings.routeColor
+    : '#ffb347';
+  annotationState.settings.brushSize = brushSize;
+  annotationState.settings.fogBrushMode = fogBrushMode;
+  annotationState.settings.shapeKind = shapeKind;
+  annotationState.settings.shapeSize = shapeSize;
+  annotationState.settings.shapeColor = shapeColor;
+  annotationState.settings.routeColor = routeColor;
+  delete annotationState.settings.markerIcon;
+
+  document.getElementById('fog-toggle').checked = Boolean(annotationState.settings.fogEnabled);
+  document.getElementById('fog-brush-size').value = String(brushSize);
+  document.getElementById('fog-brush-output').textContent = `${brushSize} m`;
+  syncFogBrushModeControls();
+  document.querySelectorAll('input[name="shape-kind"]').forEach((input) => {
+    input.checked = input.value === shapeKind;
+  });
+  document.getElementById('shape-size').value = String(shapeSize);
+  document.getElementById('shape-size-output').textContent = `${shapeSize} px`;
+  document.getElementById('shape-color').value = shapeColor;
+  document.getElementById('route-color').value = routeColor;
+  setFogVisibility();
+}
+
 // ─── Maps JSON ───────────────────────────────────────────────────────────────
 
 async function updateMaps() {
+  // Loading the generated script works on both http(s):// and file:// URLs.
+  // Firefox intentionally blocks fetch() for sibling files opened via file://.
+  if (window.TLD_MAPS && typeof window.TLD_MAPS === 'object') {
+    maps = window.TLD_MAPS;
+    console.log('Maps data loaded from the local catalogue.');
+    return;
+  }
+
   try {
     const response = await fetch('assets/js/maps.json');
     if (!response.ok) throw new Error(`HTTP ${response.status}`);
@@ -243,23 +873,42 @@ function showMap(mapId) {
     image.style.top = '0px';
   });
 
-  const mapImageUrl = maps[mapId]?.[currentCategory];
+  const mapImageUrl = maps[mapId] && maps[mapId][currentCategory];
   if (mapImageUrl) {
     const img = document.querySelector('#map-image img');
+    img.onload = () => {
+      if (currentMapId === mapId) window.requestAnimationFrame(syncAnnotationLayers);
+    };
+    img.onerror = () => {
+      img.alt = 'This region map could not be loaded. Check your internet connection and try again.';
+      setAnnotationStatus('Map image could not be loaded', true);
+    };
     img.src = mapImageUrl;
     resetTransform();
     document.querySelector('#map-image').classList.add('active');
+    if (img.complete && img.naturalWidth) {
+      window.requestAnimationFrame(syncAnnotationLayers);
+    }
+    return true;
   } else {
     console.error('Map URL not found for', mapId, currentCategory);
+    return false;
   }
 }
 
 function loadMap(mapId, updateHistory = true) {
+  if (!maps[mapId] || !maps[mapId][currentCategory]) {
+    console.error('Map data is not available for', mapId, currentCategory);
+    return;
+  }
+
+  cancelPendingRoute();
   currentMapId = mapId;
   document.querySelectorAll('.highlight-overlay').forEach((el) => el.remove());
   showMap(mapId);
   document.getElementById('start-map-image').style.display = 'none';
   document.querySelector('#images-wrapper').style.display = 'block';
+  document.body.classList.add('map-open');
 
   // Adds the map to the browser history
   if (updateHistory) {
@@ -268,6 +917,7 @@ function loadMap(mapId, updateHistory = true) {
 }
 
 function showStartMap(updateHistory = true) {
+  cancelPendingRoute();
   currentMapId = null;
   document.getElementById('start-map-image').style.display = 'block';
   document.querySelectorAll('.image-container').forEach((image) => {
@@ -276,6 +926,8 @@ function showStartMap(updateHistory = true) {
   const img = document.querySelector('#map-image img');
   if (img) img.src = '';
   resetTransform();
+  document.body.classList.remove('map-open');
+  setActiveTool('pan');
 
   // Clears the hash from the URL and adds to history
   if (updateHistory) {
@@ -289,7 +941,7 @@ document.getElementById('homeButton').addEventListener('click', () => showStartM
 
 document.querySelectorAll('.image-container').forEach((map) => {
   map.addEventListener('mousedown', (e) => {
-    if (!map.classList.contains('active')) return;
+    if (!map.classList.contains('active') || activeTool !== 'pan') return;
     dragging = true;
     dragStartX = e.clientX;
     dragStartY = e.clientY;
@@ -337,7 +989,7 @@ function getTouchDistance(touches) {
 
 document.querySelectorAll('.image-container').forEach((map) => {
   map.addEventListener('touchstart', (e) => {
-    if (!map.classList.contains('active')) return;
+    if (!map.classList.contains('active') || activeTool !== 'pan') return;
     if (e.touches.length === 2) {
       touchStartDist = getTouchDistance(e.touches);
       touchStartZoom = zoomLevel;
@@ -351,7 +1003,7 @@ document.querySelectorAll('.image-container').forEach((map) => {
   }, { passive: false });
 
   map.addEventListener('touchmove', (e) => {
-    if (!map.classList.contains('active')) return;
+    if (!map.classList.contains('active') || activeTool !== 'pan') return;
     if (e.touches.length === 2 && touchStartDist !== null) {
       const currentDist = getTouchDistance(e.touches);
       zoomLevel = Math.min(Math.max(touchStartZoom * (currentDist / touchStartDist), 0.5), 5);
@@ -473,8 +1125,163 @@ document.addEventListener('mousedown', (e) => {
 
 // --- Passage Click Coordinates Logic ---
 const mapContainer = document.querySelector('#map-image');
+const mapStage = document.getElementById('map-stage');
 let clickStartX = 0;
 let clickStartY = 0;
+
+mapContainer.addEventListener('contextmenu', (event) => {
+  if (!currentMapId) return;
+  event.preventDefault();
+  setActiveTool('pan');
+});
+
+function finishFogStroke(event) {
+  if (!fogDrawing) return;
+  fogDrawing = false;
+  lastFogPoint = null;
+  const pointerId = event && event.pointerId !== undefined ? event.pointerId : fogPointerId;
+  if (pointerId !== null && mapStage.hasPointerCapture(pointerId)) {
+    mapStage.releasePointerCapture(pointerId);
+  }
+  fogPointerId = null;
+  saveCurrentFog();
+}
+
+mapStage.addEventListener('pointerdown', (event) => {
+  if (!currentMapId || activeTool === 'pan' || event.button !== 0) return;
+  const point = clientPointToMap(event.clientX, event.clientY);
+  if (!point) return;
+
+  event.preventDefault();
+  event.stopPropagation();
+
+  if (activeTool === 'fog') {
+    fogDrawing = true;
+    fogPointerId = event.pointerId;
+    lastFogPoint = point;
+    mapStage.setPointerCapture(event.pointerId);
+    applyFogBrushAtPoint(point);
+    updateBrushPreview(point);
+  } else if (activeTool === 'shape') {
+    addShape(point);
+  } else if (activeTool === 'route') {
+    addRoutePoint(point);
+  }
+});
+
+mapStage.addEventListener('pointermove', (event) => {
+  if (!currentMapId) return;
+  const point = clientPointToMap(event.clientX, event.clientY);
+
+  if (activeTool === 'fog') updateBrushPreview(point);
+  if (activeTool === 'route' && pendingRoutePoints.length) {
+    routePointerPoint = point;
+    renderRoutes();
+  }
+
+  if (fogDrawing && point) {
+    applyFogBrushAtPoint(point, lastFogPoint);
+    lastFogPoint = point;
+    event.preventDefault();
+  }
+});
+
+mapStage.addEventListener('pointerup', finishFogStroke);
+mapStage.addEventListener('pointercancel', finishFogStroke);
+mapStage.addEventListener('pointerleave', () => {
+  if (!fogDrawing) updateBrushPreview(null);
+  if (activeTool === 'route' && pendingRoutePoints.length) {
+    routePointerPoint = null;
+    renderRoutes();
+  }
+});
+
+document.querySelectorAll('.tool-button').forEach((button) => {
+  button.addEventListener('click', () => setActiveTool(button.dataset.tool));
+});
+
+document.getElementById('fog-toggle').addEventListener('change', (event) => {
+  annotationState.settings.fogEnabled = event.target.checked;
+  setFogVisibility();
+  saveAnnotationState();
+});
+
+document.getElementById('fog-brush-size').addEventListener('input', (event) => {
+  annotationState.settings.brushSize = Number(event.target.value);
+  document.getElementById('fog-brush-output').textContent = `${event.target.value} m`;
+});
+
+document.getElementById('fog-brush-size').addEventListener('change', saveAnnotationState);
+
+document.querySelectorAll('[data-fog-mode]').forEach((button) => {
+  button.addEventListener('click', () => setFogBrushMode(button.dataset.fogMode));
+});
+
+document.getElementById('reset-current-fog').addEventListener('click', () => {
+  if (!currentMapId) return;
+  if (window.confirm("Reset all explored fog for this map?")) resetCurrentFog();
+});
+
+document.querySelectorAll('input[name="shape-kind"]').forEach((input) => {
+  input.addEventListener('change', (event) => {
+    if (!event.target.checked) return;
+    annotationState.settings.shapeKind = normalizeShapeKind(event.target.value);
+    saveAnnotationState();
+  });
+});
+
+document.getElementById('shape-size').addEventListener('input', (event) => {
+  annotationState.settings.shapeSize = normalizeShapeSize(event.target.value);
+  document.getElementById('shape-size-output').textContent = `${event.target.value} px`;
+});
+
+document.getElementById('shape-size').addEventListener('change', saveAnnotationState);
+
+document.getElementById('shape-color').addEventListener('input', (event) => {
+  annotationState.settings.shapeColor = event.target.value;
+});
+
+document.getElementById('shape-color').addEventListener('change', saveAnnotationState);
+
+document.getElementById('route-color').addEventListener('input', (event) => {
+  annotationState.settings.routeColor = event.target.value;
+  renderRoutes();
+});
+
+document.getElementById('route-color').addEventListener('change', saveAnnotationState);
+document.getElementById('finish-route').addEventListener('click', finishPendingRoute);
+document.getElementById('cancel-route').addEventListener('click', cancelPendingRoute);
+
+document.getElementById('clear-annotation-data').addEventListener('click', () => {
+  const shouldClear = window.confirm(
+    'Clear all fog progress, custom shapes, and planned routes from this browser?',
+  );
+  if (!shouldClear) return;
+
+  localStorage.removeItem(ANNOTATION_STORAGE_KEY);
+  annotationState = createDefaultAnnotationState();
+  pendingRoutePoints = [];
+  routePointerPoint = null;
+  syncAnnotationControls();
+  if (currentMapId) syncAnnotationLayers();
+  setActiveTool('pan');
+  setAnnotationStatus('Local data cleared');
+});
+
+document.addEventListener('keydown', (event) => {
+  if (!currentMapId) return;
+  if (event.key === 'Escape') {
+    event.preventDefault();
+    setActiveTool('pan');
+    return;
+  }
+  if (activeTool === 'route' && event.key === 'Enter' && pendingRoutePoints.length >= 2) {
+    finishPendingRoute();
+  }
+});
+
+syncAnnotationControls();
+setActiveTool('pan');
 
 mapContainer.addEventListener('mousedown', (e) => {
   clickStartX = e.clientX;
@@ -482,7 +1289,7 @@ mapContainer.addEventListener('mousedown', (e) => {
 });
 
 mapContainer.addEventListener('mouseup', (e) => {
-  if (!currentMapId) return;
+  if (!currentMapId || activeTool !== 'pan') return;
 
   const moveX = Math.abs(e.clientX - clickStartX);
   const moveY = Math.abs(e.clientY - clickStartY);
@@ -532,7 +1339,7 @@ mapContainer.addEventListener('mouseup', (e) => {
 
 // ─── Hover effect logic (cursor to pointer) ───────────────────────────────────
 mapContainer.addEventListener('mousemove', (e) => {
-  if (dragging || !currentMapId) {
+  if (dragging || !currentMapId || activeTool !== 'pan') {
     mapContainer.style.cursor = '';
     return;
   }

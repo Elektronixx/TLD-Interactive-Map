@@ -67,6 +67,15 @@
             >
           </p>
         </div>
+        <div class="local-data-settings">
+          <h2>Local Map Data</h2>
+          <p>
+            Fog progress, shapes, and routes are stored only in this browser.
+          </p>
+          <button id="clear-annotation-data" class="danger-button" type="button">
+            Clear all annotation data
+          </button>
+        </div>
       </div>
     </div>
 
@@ -317,12 +326,99 @@
     <!-- Map Image Wrapper -->
     <div id="images-wrapper">
       <div class="image-container" id="map-image">
-        <img
-          src="#"
-          alt="This Map was recently updated! Cron will fix this within 24h"
-        />
+        <div id="map-stage" class="map-stage">
+          <img
+            src="#"
+            alt="This Map was recently updated! Cron will fix this within 24h"
+            draggable="false"
+          />
+          <canvas id="fog-canvas" class="map-layer fog-canvas"></canvas>
+          <svg
+            id="route-layer"
+            class="map-layer route-layer"
+            viewBox="0 0 1000 1000"
+            preserveAspectRatio="none"
+            aria-label="Planned routes"
+          ></svg>
+          <div id="shape-layer" class="map-layer shape-layer"></div>
+          <div id="brush-preview" class="brush-preview" aria-hidden="true"></div>
+        </div>
       </div>
     </div>
+
+    <aside id="annotation-toolbar" class="annotation-toolbar" aria-label="Map annotation tools">
+      <div class="annotation-toolbar__header">
+        <strong>Map notes</strong>
+        <span id="annotation-status" class="annotation-status" role="status">Saved locally</span>
+      </div>
+
+      <div class="tool-buttons" role="toolbar" aria-label="Choose an annotation tool">
+        <button class="tool-button active" type="button" data-tool="pan" aria-pressed="true">
+          <i class="fas fa-hand" aria-hidden="true"></i><span>Pan</span>
+        </button>
+        <button class="tool-button" type="button" data-tool="fog" aria-pressed="false">
+          <i class="fas fa-eraser" aria-hidden="true"></i><span>Explore</span>
+        </button>
+        <button class="tool-button" type="button" data-tool="shape" aria-pressed="false">
+          <i class="fas fa-shapes" aria-hidden="true"></i><span>Shape</span>
+        </button>
+        <button class="tool-button" type="button" data-tool="route" aria-pressed="false">
+          <i class="fas fa-route" aria-hidden="true"></i><span>Route</span>
+        </button>
+        <button class="tool-button" type="button" data-tool="erase" aria-pressed="false">
+          <i class="fas fa-trash-alt" aria-hidden="true"></i><span>Erase</span>
+        </button>
+      </div>
+
+      <div class="tool-options fog-options" data-options-for="fog">
+        <label class="toggle-row" for="fog-toggle">
+          <span>Fog of war</span>
+          <input id="fog-toggle" type="checkbox" />
+        </label>
+        <div class="fog-mode-buttons" role="group" aria-label="Fog brush mode">
+          <button type="button" class="active" data-fog-mode="reveal" aria-pressed="true">
+            Reveal
+          </button>
+          <button type="button" data-fog-mode="restore" aria-pressed="false">
+            Restore fog
+          </button>
+        </div>
+        <label for="fog-brush-size">
+          Brush size <output id="fog-brush-output" for="fog-brush-size">80 m</output>
+        </label>
+        <input id="fog-brush-size" type="range" min="20" max="200" step="10" value="80" />
+        <button id="reset-current-fog" class="subtle-button" type="button">Reset this map's fog</button>
+      </div>
+
+      <div class="tool-options shape-options" data-options-for="shape" hidden>
+        <fieldset class="shape-kind-options">
+          <legend>Shape</legend>
+          <label><input type="radio" name="shape-kind" value="circle" checked /> Circle</label>
+          <label><input type="radio" name="shape-kind" value="square" /> Square</label>
+          <label><input type="radio" name="shape-kind" value="triangle" /> Triangle</label>
+          <label><input type="radio" name="shape-kind" value="cross" /> Cross</label>
+        </fieldset>
+        <label for="shape-color">Colour</label>
+        <input id="shape-color" type="color" value="#ef5350" />
+        <label for="shape-size">
+          Size <output id="shape-size-output" for="shape-size">8 px</output>
+        </label>
+        <input id="shape-size" type="range" min="6" max="24" step="1" value="8" />
+        <label for="shape-label">Label (optional)</label>
+        <input id="shape-label" type="text" maxlength="60" placeholder="e.g. stocked safehouse" />
+      </div>
+
+      <div class="tool-options route-options" data-options-for="route" hidden>
+        <label for="route-color">Route colour</label>
+        <input id="route-color" type="color" value="#ffb347" />
+        <div class="route-actions">
+          <button id="finish-route" class="subtle-button" type="button" disabled>Finish route</button>
+          <button id="cancel-route" class="subtle-button" type="button" disabled>Cancel</button>
+        </div>
+      </div>
+
+      <p id="tool-help" class="tool-help">Drag to pan. Use the mouse wheel or pinch to zoom.</p>
+    </aside>
 
     <!-- Home button at the bottom-right -->
     <button id="homeButton" class="home-button">
@@ -330,6 +426,7 @@
     </button>
 
     <!-- Link to external JS -->
+    <script src="assets/js/maps-data.js"></script>
     <script src="assets/js/script.js"></script>
   </body>
 </html>

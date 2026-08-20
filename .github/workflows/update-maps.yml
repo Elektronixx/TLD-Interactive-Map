@@ -29,14 +29,14 @@ jobs:
         working-directory: assets/js
         run: node update-maps.js
 
-      - name: Commit and push updated maps.json
+      - name: Commit and push updated map catalogues
         run: |
           if git diff --quiet; then
-            echo "No changes to maps.json"
+            echo "No map catalogue changes"
             exit 0
           fi
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
-          git add assets/js/maps.json
-          git commit -m "Update maps.json"
+          git add assets/js/maps.json assets/js/maps-data.js
+          git commit -m "Update map catalogues"
           git push

@@ -66,20 +66,165 @@ button:focus {
   justify-content: center;
 }
 
-.image-container img {
+.map-stage {
+  position: relative;
+  flex: none;
+  line-height: 0;
+  transform-origin: center center;
+  transition: transform 0.05s ease-out;
+  will-change: transform;
+}
+
+.map-stage > img {
+  display: block;
   max-width: 100%;
   max-height: 100vh;
   max-height: 100dvh;
   width: auto;
   height: auto;
-  transform-origin: center center;
-  transition: transform 0.05s ease-out;
   pointer-events: none;
-  will-change: transform; /* hint to browser for smoother rendering */
 }
 
 .image-container.dragging {
   cursor: grabbing;
+}
+
+.image-container.annotation-active {
+  cursor: crosshair;
+}
+
+/* ─── Annotation Layers ─────────────────────────────────────────────────────── */
+
+.map-layer {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+}
+
+.fog-canvas {
+  display: none;
+  z-index: 2;
+  opacity: 0.38;
+  pointer-events: none;
+}
+
+.fog-canvas.enabled {
+  display: block;
+}
+
+.route-layer {
+  z-index: 3;
+  overflow: visible;
+  pointer-events: none;
+}
+
+.planned-route,
+.route-preview {
+  fill: none;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+.planned-route {
+  pointer-events: stroke;
+  cursor: pointer;
+  filter: drop-shadow(0 2px 2px rgb(0 0 0 / 70%));
+}
+
+.route-preview {
+  stroke-dasharray: 14 12;
+  opacity: 0.9;
+  pointer-events: none;
+}
+
+.route-node {
+  stroke: #fff;
+  stroke-width: 2;
+  pointer-events: none;
+}
+
+.shape-layer {
+  z-index: 4;
+  pointer-events: none;
+}
+
+.map-shape {
+  --shape-color: #ef5350;
+  --shape-size: 8px;
+
+  position: absolute;
+  display: block;
+  width: var(--shape-size);
+  height: var(--shape-size);
+  padding: 0;
+  color: #fff;
+  background: transparent;
+  border: 0;
+  transform: translate(-50%, -50%);
+  transform-origin: center center;
+  pointer-events: auto;
+  cursor: default;
+  white-space: nowrap;
+  line-height: 1;
+}
+
+.map-shape:focus-visible {
+  outline: 2px solid #fff;
+  outline-offset: 4px;
+}
+
+.map-shape__glyph {
+  position: relative;
+  display: block;
+  width: 100%;
+  height: 100%;
+  color: var(--shape-color);
+  overflow: visible;
+  filter: drop-shadow(0 2px 2px rgb(0 0 0 / 75%));
+}
+
+.map-shape__label {
+  position: absolute;
+  top: 50%;
+  left: calc(100% + 7px);
+  max-width: 150px;
+  padding: 4px 6px;
+  overflow: hidden;
+  color: #fff;
+  background: rgb(27 31 34 / 88%);
+  border: 1px solid rgb(255 255 255 / 55%);
+  border-radius: 4px;
+  box-shadow: 0 2px 5px rgb(0 0 0 / 60%);
+  font-size: 12px;
+  line-height: 1.2;
+  text-overflow: ellipsis;
+  transform: translateY(-50%);
+}
+
+.image-container.erase-active .map-shape,
+.image-container.erase-active .planned-route {
+  cursor: not-allowed;
+}
+
+.brush-preview {
+  position: absolute;
+  z-index: 5;
+  display: none;
+  border: 2px solid rgb(255 255 255 / 95%);
+  border-radius: 50%;
+  box-shadow: 0 0 0 1px rgb(0 0 0 / 60%), inset 0 0 12px rgb(255 255 255 / 18%);
+  pointer-events: none;
+  transform: translate(-50%, -50%);
+}
+
+.image-container.fog-active .brush-preview {
+  display: block;
+}
+
+.image-container.fog-restore-active .brush-preview {
+  background: rgb(5 8 10 / 24%);
+  border-color: #ffb27a;
 }
 
 /* ─── Overlay / Highlight Aura ───────────────────────────────────────────────── */
@@ -187,6 +332,263 @@ button:focus {
   display: grid;
   grid-template-columns: 1fr 1fr;
   gap: 10px;
+}
+
+.local-data-settings {
+  grid-column: 1 / -1;
+  padding-top: 12px;
+  border-top: 1px solid #666;
+}
+
+.local-data-settings p {
+  margin: 8px 0 14px;
+  color: #ccc;
+}
+
+.danger-button,
+.subtle-button {
+  padding: 9px 12px;
+  color: #fff;
+  background: #222;
+  border: 1px solid #777;
+  border-radius: 6px;
+  cursor: pointer;
+}
+
+.danger-button {
+  border-color: #b64e4e;
+}
+
+.danger-button:hover {
+  background: #7d2929;
+}
+
+.subtle-button:hover:not(:disabled) {
+  background: #444;
+  border-color: #aaa;
+}
+
+.subtle-button:disabled {
+  cursor: not-allowed;
+  opacity: 0.45;
+}
+
+/* ─── Annotation Toolbar ────────────────────────────────────────────────────── */
+
+.annotation-toolbar {
+  position: fixed;
+  top: 16px;
+  left: 16px;
+  z-index: 1100;
+  display: none;
+  width: min(360px, calc(100vw - 32px));
+  padding: 12px;
+  color: #fff;
+  background: rgb(28 31 34 / 96%);
+  border: 1px solid #777;
+  border-radius: 10px;
+  box-shadow: 0 6px 20px rgb(0 0 0 / 45%);
+  box-sizing: border-box;
+  user-select: none;
+}
+
+body.map-open .annotation-toolbar {
+  display: block;
+}
+
+.annotation-toolbar__header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 10px;
+  line-height: 1.2;
+}
+
+.annotation-status {
+  color: #a9c7aa;
+  font-size: 12px;
+}
+
+.annotation-status.error {
+  color: #ff9c9c;
+}
+
+.tool-buttons {
+  display: grid;
+  grid-template-columns: repeat(5, 1fr);
+  gap: 5px;
+}
+
+.tool-button {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  min-width: 0;
+  padding: 8px 3px;
+  color: #ddd;
+  background: #222;
+  border: 1px solid #555;
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 11px;
+}
+
+.tool-button i {
+  font-size: 15px;
+}
+
+.tool-button:hover,
+.tool-button.active {
+  color: #fff;
+  background: #30445d;
+  border-color: #78a9df;
+}
+
+.tool-options {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  align-items: center;
+  gap: 8px;
+  margin-top: 10px;
+  padding-top: 10px;
+  border-top: 1px solid #555;
+  font-size: 13px;
+}
+
+.tool-options[hidden] {
+  display: none;
+}
+
+.tool-options > input[type='range'],
+.tool-options > input[type='text'],
+.tool-options > .fog-mode-buttons,
+.tool-options > .shape-kind-options,
+.tool-options > .route-actions,
+.tool-options > .subtle-button {
+  grid-column: 1 / -1;
+}
+
+.tool-options input[type='range'] {
+  width: 100%;
+  accent-color: #78a9df;
+}
+
+.tool-options input[type='text'] {
+  min-width: 0;
+  padding: 8px 9px;
+  color: #fff;
+  background: #151719;
+  border: 1px solid #666;
+  border-radius: 5px;
+}
+
+.toggle-row {
+  grid-column: 1 / -1;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.toggle-row input {
+  width: 18px;
+  height: 18px;
+  accent-color: #78a9df;
+}
+
+.fog-mode-buttons {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 6px;
+}
+
+.fog-mode-buttons button {
+  padding: 8px 10px;
+  color: #ddd;
+  background: #222;
+  border: 1px solid #555;
+  border-radius: 5px;
+  cursor: pointer;
+}
+
+.fog-mode-buttons button:hover,
+.fog-mode-buttons button.active {
+  color: #fff;
+  background: #30445d;
+  border-color: #78a9df;
+}
+
+.shape-kind-options {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 6px;
+  margin: 0;
+  padding: 0;
+  border: 0;
+}
+
+.shape-kind-options legend {
+  margin-bottom: 6px;
+  font-size: 13px;
+}
+
+.shape-kind-options label {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 7px 8px;
+  color: #ddd;
+  background: #222;
+  border: 1px solid #555;
+  border-radius: 5px;
+  cursor: pointer;
+}
+
+.shape-kind-options label:has(input:checked) {
+  color: #fff;
+  background: #30445d;
+  border-color: #78a9df;
+}
+
+.shape-kind-options input {
+  margin: 0;
+  accent-color: #78a9df;
+}
+
+#shape-color {
+  justify-self: end;
+  width: 52px;
+  height: 30px;
+  padding: 2px;
+  background: #222;
+  border: 1px solid #666;
+  border-radius: 5px;
+}
+
+#route-color {
+  justify-self: end;
+  width: 52px;
+  height: 30px;
+  padding: 2px;
+  background: #222;
+  border: 1px solid #666;
+  border-radius: 5px;
+}
+
+.route-actions {
+  display: flex;
+  gap: 7px;
+}
+
+.route-actions button {
+  flex: 1;
+}
+
+.tool-help {
+  margin: 9px 0 0;
+  color: #bbb;
+  font-size: 12px;
+  line-height: 1.35;
 }
 
 /* FIX: on narrow screens, stack the two columns */
@@ -348,6 +750,14 @@ button:focus {
   .image-container img {
     max-width: 100vw;
     max-height: 100dvh;
+  }
+
+  .annotation-toolbar {
+    top: 8px;
+    left: 8px;
+    width: min(360px, calc(100vw - 16px));
+    max-height: calc(100dvh - 80px);
+    overflow-y: auto;
   }
 }
 

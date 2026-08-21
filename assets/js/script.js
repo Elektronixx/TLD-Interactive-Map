@@ -462,7 +462,7 @@ function createRoutePolyline(points, color, className) {
   const polyline = document.createElementNS(SVG_NAMESPACE, 'polyline');
   polyline.setAttribute('points', routePointsAttribute(points));
   polyline.setAttribute('stroke', isValidColor(color) ? color : '#ffb347');
-  polyline.setAttribute('stroke-width', '6');
+  polyline.setAttribute('stroke-width', '3');
   polyline.setAttribute('class', className);
   return polyline;
 }
@@ -1132,6 +1132,15 @@ let clickStartY = 0;
 mapContainer.addEventListener('contextmenu', (event) => {
   if (!currentMapId) return;
   event.preventDefault();
+
+  if (activeTool === 'route' && pendingRoutePoints.length) {
+    pendingRoutePoints.pop();
+    routePointerPoint = null;
+    updateRouteButtons();
+    renderRoutes();
+    return;
+  }
+
   setActiveTool('pan');
 });
 
@@ -1270,6 +1279,27 @@ document.getElementById('clear-annotation-data').addEventListener('click', () =>
 
 document.addEventListener('keydown', (event) => {
   if (!currentMapId) return;
+
+  const target = event.target;
+  const isEditingControl = target instanceof HTMLElement &&
+    (target.matches('input, select, textarea, button') || target.isContentEditable);
+  const arrowDirections = {
+    ArrowLeft: [1, 0],
+    ArrowRight: [-1, 0],
+    ArrowUp: [0, 1],
+    ArrowDown: [0, -1],
+  };
+  const direction = arrowDirections[event.key];
+
+  if (direction && !isEditingControl) {
+    event.preventDefault();
+    const panStep = event.shiftKey ? 100 : 40;
+    panX += direction[0] * panStep;
+    panY += direction[1] * panStep;
+    applyTransform();
+    return;
+  }
+
   if (event.key === 'Escape') {
     event.preventDefault();
     setActiveTool('pan');

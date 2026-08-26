@@ -119,6 +119,10 @@ button:focus {
   pointer-events: none;
 }
 
+.image-container.route-editing .route-layer {
+  z-index: 6;
+}
+
 .planned-route,
 .route-preview {
   fill: none;
@@ -133,6 +137,11 @@ button:focus {
   filter: drop-shadow(0 2px 2px rgb(0 0 0 / 70%));
 }
 
+.planned-route.selected {
+  opacity: 0.9;
+  filter: drop-shadow(0 0 3px rgb(255 255 255 / 85%));
+}
+
 .route-preview {
   stroke-dasharray: 14 12;
   pointer-events: none;
@@ -144,8 +153,56 @@ button:focus {
   pointer-events: none;
 }
 
-.shape-layer {
+.route-joint {
+  stroke: #fff;
+  stroke-width: 3;
+  pointer-events: all;
+  cursor: grab;
+  vector-effect: non-scaling-stroke;
+}
+
+.route-joint.selected {
+  stroke: #ffe08a;
+  stroke-width: 4;
+}
+
+.route-joint:active {
+  cursor: grabbing;
+}
+
+.route-label-layer {
   z-index: 4;
+  overflow: visible;
+  pointer-events: none;
+}
+
+.image-container.route-editing .route-label-layer {
+  z-index: 7;
+}
+
+.route-label {
+  position: absolute;
+  max-width: 120px;
+  padding: 2px 3px;
+  overflow: hidden;
+  color: #fff;
+  background: rgb(27 31 34 / 88%);
+  border: 0.5px solid rgb(255 255 255 / 45%);
+  border-radius: 2px;
+  box-shadow: 0 2px 5px rgb(0 0 0 / 60%);
+  font-size: 8px;
+  line-height: 1.2;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  transform: translate(-50%, -50%);
+}
+
+.route-label.selected {
+  border-color: rgb(255 224 138 / 90%);
+}
+
+.shape-layer {
+  z-index: 5;
   pointer-events: none;
 }
 

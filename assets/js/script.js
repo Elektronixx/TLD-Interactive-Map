@@ -32,6 +32,10 @@ let fogPointerId = null;
 let lastFogPoint = null;
 let pendingRoutePoints = [];
 let routePointerPoint = null;
+let selectedRouteId = null;
+let selectedRoutePointIndex = null;
+let routePointDrag = null;
+let routeDraftLabel = '';
 let annotationStatusTimer = null;
 
 function createDefaultAnnotationState() {
@@ -95,6 +99,10 @@ function getMapAnnotations(mapId = currentMapId) {
   }
   delete mapData.markers;
   if (!Array.isArray(mapData.routes)) mapData.routes = [];
+  mapData.routes.forEach((route) => {
+    if (!route.id) route.id = createAnnotationId('route');
+    if (typeof route.label !== 'string') route.label = '';
+  });
   return mapData;
 }
 
@@ -458,6 +466,36 @@ function routePointsAttribute(points) {
   return points.map((point) => `${point.x * 1000},${point.y * 1000}`).join(' ');
 }
 
+function routeLabelPoint(points) {
+  if (!Array.isArray(points) || points.length === 0) return null;
+  if (points.length === 1) return { ...points[0] };
+
+  const segments = [];
+  let totalLength = 0;
+  for (let index = 1; index < points.length; index += 1) {
+    const start = points[index - 1];
+    const end = points[index];
+    const length = Math.hypot(end.x - start.x, end.y - start.y);
+    segments.push({ start, end, length });
+    totalLength += length;
+  }
+
+  if (totalLength === 0) return { ...points[0] };
+  let distanceToMiddle = totalLength / 2;
+  for (const segment of segments) {
+    if (distanceToMiddle <= segment.length) {
+      const progress = segment.length === 0 ? 0 : distanceToMiddle / segment.length;
+      return {
+        x: segment.start.x + (segment.end.x - segment.start.x) * progress,
+        y: segment.start.y + (segment.end.y - segment.start.y) * progress,
+      };
+    }
+    distanceToMiddle -= segment.length;
+  }
+
+  return { ...points[points.length - 1] };
+}
+
 function createRoutePolyline(points, color, className) {
   const polyline = document.createElementNS(SVG_NAMESPACE, 'polyline');
   polyline.setAttribute('points', routePointsAttribute(points));
@@ -467,23 +505,131 @@ function createRoutePolyline(points, color, className) {
   return polyline;
 }
 
+function getSelectedRoute(mapData = getMapAnnotations()) {
+  if (!mapData || !selectedRouteId) return null;
+  return mapData.routes.find((route) => route.id === selectedRouteId) || null;
+}
+
+function syncRouteControls() {
+  const selectedRoute = getSelectedRoute();
+  const routeColor = selectedRoute && isValidColor(selectedRoute.color)
+    ? selectedRoute.color
+    : annotationState.settings.routeColor;
+  const colorInput = document.getElementById('route-color');
+  const labelInput = document.getElementById('route-label');
+  const deleteJointButton = document.getElementById('delete-route-joint');
+
+  if (colorInput) colorInput.value = routeColor;
+  if (labelInput) labelInput.value = selectedRoute ? selectedRoute.label : routeDraftLabel;
+  if (deleteJointButton) {
+    deleteJointButton.disabled = !selectedRoute || !Number.isInteger(selectedRoutePointIndex);
+  }
+}
+
+function renderRouteLabels(mapData) {
+  const layer = document.getElementById('route-label-layer');
+  if (!layer) return;
+  layer.replaceChildren();
+
+  mapData.routes.forEach((route) => {
+    const labelText = typeof route.label === 'string' ? route.label.trim() : '';
+    const point = routeLabelPoint(route.points);
+    if (!labelText || !point) return;
+
+    const label = document.createElement('span');
+    label.className = 'route-label';
+    label.classList.toggle('selected', route.id === selectedRouteId && activeTool === 'route');
+    label.style.left = `${point.x * 100}%`;
+    label.style.top = `${point.y * 100}%`;
+    label.textContent = labelText;
+    layer.appendChild(label);
+  });
+}
+
+function selectRoute(routeId, pointIndex = null) {
+  if (pendingRoutePoints.length) return;
+  selectedRouteId = routeId;
+  selectedRoutePointIndex = Number.isInteger(pointIndex) ? pointIndex : null;
+  routePointerPoint = null;
+  syncRouteControls();
+  renderRoutes();
+}
+
+function clearRouteSelection() {
+  selectedRouteId = null;
+  selectedRoutePointIndex = null;
+  routePointDrag = null;
+  syncRouteControls();
+}
+
 function renderRoutes() {
   const layer = document.getElementById('route-layer');
   const mapData = getMapAnnotations();
   if (!layer || !mapData) return;
   layer.replaceChildren();
 
+  if (selectedRouteId && !getSelectedRoute(mapData)) {
+    selectedRouteId = null;
+    selectedRoutePointIndex = null;
+  }
+  document.getElementById('map-image').classList.toggle(
+    'route-editing',
+    activeTool === 'route' && Boolean(getSelectedRoute(mapData)),
+  );
+
   mapData.routes.forEach((route) => {
     if (!Array.isArray(route.points) || route.points.length < 2) return;
-    const polyline = createRoutePolyline(route.points, route.color, 'planned-route');
+    const isSelected = activeTool === 'route' && route.id === selectedRouteId;
+    const className = `planned-route${isSelected ? ' selected' : ''}`;
+    const polyline = createRoutePolyline(route.points, route.color, className);
     polyline.dataset.routeId = route.id;
     polyline.addEventListener('pointerdown', (event) => {
-      if (activeTool !== 'erase' || event.button !== 0) return;
-      event.preventDefault();
-      event.stopPropagation();
-      removeRoute(route.id);
+      if (event.button !== 0) return;
+      if (activeTool === 'erase') {
+        event.preventDefault();
+        event.stopPropagation();
+        removeRoute(route.id);
+      } else if (activeTool === 'route' && pendingRoutePoints.length === 0) {
+        event.preventDefault();
+        event.stopPropagation();
+        selectRoute(route.id);
+      }
     });
     layer.appendChild(polyline);
+
+    if (isSelected) {
+      route.points.forEach((point, pointIndex) => {
+        const node = document.createElementNS(SVG_NAMESPACE, 'circle');
+        node.setAttribute('cx', String(point.x * 1000));
+        node.setAttribute('cy', String(point.y * 1000));
+        node.setAttribute('r', '8');
+        node.setAttribute('fill', isValidColor(route.color) ? route.color : '#ffb347');
+        node.setAttribute(
+          'class',
+          `route-joint${selectedRoutePointIndex === pointIndex ? ' selected' : ''}`,
+        );
+        node.dataset.routeId = route.id;
+        node.dataset.pointIndex = String(pointIndex);
+        node.addEventListener('pointerdown', (event) => {
+          if (activeTool !== 'route' || event.button !== 0) return;
+          event.preventDefault();
+          event.stopPropagation();
+          selectedRoutePointIndex = pointIndex;
+          routePointDrag = { routeId: route.id, pointIndex, pointerId: event.pointerId };
+          mapStage.setPointerCapture(event.pointerId);
+          syncRouteControls();
+          renderRoutes();
+        });
+        node.addEventListener('contextmenu', (event) => {
+          if (activeTool !== 'route') return;
+          event.preventDefault();
+          event.stopPropagation();
+          selectedRoutePointIndex = pointIndex;
+          removeSelectedRoutePoint();
+        });
+        layer.appendChild(node);
+      });
+    }
   });
 
   if (pendingRoutePoints.length) {
@@ -508,6 +654,9 @@ function renderRoutes() {
       layer.appendChild(node);
     });
   }
+
+  renderRouteLabels(mapData);
+  syncRouteControls();
 }
 
 function updateRouteButtons() {
@@ -515,10 +664,12 @@ function updateRouteButtons() {
   const cancelButton = document.getElementById('cancel-route');
   if (finishButton) finishButton.disabled = pendingRoutePoints.length < 2;
   if (cancelButton) cancelButton.disabled = pendingRoutePoints.length === 0;
+  syncRouteControls();
 }
 
 function addRoutePoint(point) {
   if (!point) return;
+  if (selectedRouteId) clearRouteSelection();
   pendingRoutePoints.push(point);
   routePointerPoint = null;
   updateRouteButtons();
@@ -528,15 +679,20 @@ function addRoutePoint(point) {
 function finishPendingRoute() {
   const mapData = getMapAnnotations();
   if (!mapData || pendingRoutePoints.length < 2) return;
-  mapData.routes.push({
+  const route = {
     id: createAnnotationId('route'),
     points: pendingRoutePoints.map((point) => ({ ...point })),
     color: isValidColor(annotationState.settings.routeColor)
       ? annotationState.settings.routeColor
       : '#ffb347',
-  });
+    label: routeDraftLabel.trim(),
+  };
+  mapData.routes.push(route);
   pendingRoutePoints = [];
   routePointerPoint = null;
+  routeDraftLabel = '';
+  selectedRouteId = route.id;
+  selectedRoutePointIndex = null;
   saveAnnotationState();
   updateRouteButtons();
   renderRoutes();
@@ -545,6 +701,7 @@ function finishPendingRoute() {
 function cancelPendingRoute() {
   pendingRoutePoints = [];
   routePointerPoint = null;
+  routeDraftLabel = '';
   updateRouteButtons();
   renderRoutes();
 }
@@ -553,6 +710,45 @@ function removeRoute(routeId) {
   const mapData = getMapAnnotations();
   if (!mapData) return;
   mapData.routes = mapData.routes.filter((route) => route.id !== routeId);
+  if (selectedRouteId === routeId) clearRouteSelection();
+  saveAnnotationState();
+  renderRoutes();
+}
+
+function removeSelectedRoutePoint() {
+  const mapData = getMapAnnotations();
+  const route = getSelectedRoute(mapData);
+  if (!route || !Number.isInteger(selectedRoutePointIndex)) return;
+  if (selectedRoutePointIndex < 0 || selectedRoutePointIndex >= route.points.length) return;
+
+  route.points.splice(selectedRoutePointIndex, 1);
+  selectedRoutePointIndex = null;
+  routePointDrag = null;
+  if (route.points.length < 2) {
+    mapData.routes = mapData.routes.filter((item) => item.id !== route.id);
+    selectedRouteId = null;
+  }
+  saveAnnotationState();
+  renderRoutes();
+}
+
+function moveSelectedRoutePoint(event, point) {
+  if (!routePointDrag || event.pointerId !== routePointDrag.pointerId || !point) return false;
+  const mapData = getMapAnnotations();
+  const route = mapData && mapData.routes.find((item) => item.id === routePointDrag.routeId);
+  if (!route || !route.points[routePointDrag.pointIndex]) return false;
+  route.points[routePointDrag.pointIndex] = point;
+  renderRoutes();
+  event.preventDefault();
+  return true;
+}
+
+function finishRoutePointDrag(event) {
+  if (!routePointDrag || event.pointerId !== routePointDrag.pointerId) return;
+  if (mapStage.hasPointerCapture(event.pointerId)) {
+    mapStage.releasePointerCapture(event.pointerId);
+  }
+  routePointDrag = null;
   saveAnnotationState();
   renderRoutes();
 }
@@ -567,7 +763,7 @@ const toolHelp = {
   pan: 'Drag to pan. Use the mouse wheel or pinch to zoom.',
   fog: 'Use Reveal to clear explored ground or Restore fog to correct mistakes.',
   shape: 'Choose a shape, size, and colour, then click the map to place it.',
-  route: 'Click POIs or shapes to add stops, then finish the route. Press Escape to return to Pan.',
+  route: 'Draw a route or click one to edit it. Drag joints to move; right-click or Delete removes one.',
   erase: 'Click a custom shape or route to remove it.',
 };
 
@@ -576,8 +772,10 @@ function setActiveTool(tool) {
   if (activeTool === 'fog' && tool !== 'fog' && fogDrawing) {
     finishFogStroke();
   }
-  if (activeTool === 'route' && tool !== 'route' && pendingRoutePoints.length) {
-    cancelPendingRoute();
+  if (activeTool === 'route' && tool !== 'route') {
+    if (pendingRoutePoints.length) cancelPendingRoute();
+    routeDraftLabel = '';
+    clearRouteSelection();
   }
   activeTool = tool;
 
@@ -599,11 +797,13 @@ function setActiveTool(tool) {
       tool === 'fog' && normalizeFogBrushMode(annotationState.settings.fogBrushMode) === 'restore',
     );
     map.classList.toggle('erase-active', tool === 'erase');
+    map.classList.toggle('route-editing', tool === 'route' && Boolean(selectedRouteId));
   }
   document.getElementById('tool-help').textContent = toolHelp[tool];
 
   if (tool !== 'fog') updateBrushPreview(null);
   if (tool !== 'route') routePointerPoint = null;
+  syncRouteControls();
   renderRoutes();
 }
 
@@ -636,7 +836,7 @@ function syncAnnotationControls() {
   document.getElementById('shape-size').value = String(shapeSize);
   document.getElementById('shape-size-output').textContent = `${shapeSize} px`;
   document.getElementById('shape-color').value = shapeColor;
-  document.getElementById('route-color').value = routeColor;
+  syncRouteControls();
   setFogVisibility();
 }
 
@@ -1182,6 +1382,8 @@ mapStage.addEventListener('pointermove', (event) => {
   if (!currentMapId) return;
   const point = clientPointToMap(event.clientX, event.clientY);
 
+  if (moveSelectedRoutePoint(event, point)) return;
+
   if (activeTool === 'fog') updateBrushPreview(point);
   if (activeTool === 'route' && pendingRoutePoints.length) {
     routePointerPoint = point;
@@ -1195,8 +1397,14 @@ mapStage.addEventListener('pointermove', (event) => {
   }
 });
 
-mapStage.addEventListener('pointerup', finishFogStroke);
-mapStage.addEventListener('pointercancel', finishFogStroke);
+mapStage.addEventListener('pointerup', (event) => {
+  finishFogStroke(event);
+  finishRoutePointDrag(event);
+});
+mapStage.addEventListener('pointercancel', (event) => {
+  finishFogStroke(event);
+  finishRoutePointDrag(event);
+});
 mapStage.addEventListener('pointerleave', () => {
   if (!fogDrawing) updateBrushPreview(null);
   if (activeTool === 'route' && pendingRoutePoints.length) {
@@ -1253,13 +1461,29 @@ document.getElementById('shape-color').addEventListener('input', (event) => {
 document.getElementById('shape-color').addEventListener('change', saveAnnotationState);
 
 document.getElementById('route-color').addEventListener('input', (event) => {
-  annotationState.settings.routeColor = event.target.value;
+  const selectedRoute = getSelectedRoute();
+  if (selectedRoute) {
+    selectedRoute.color = event.target.value;
+  } else {
+    annotationState.settings.routeColor = event.target.value;
+  }
   renderRoutes();
 });
 
 document.getElementById('route-color').addEventListener('change', saveAnnotationState);
+document.getElementById('route-label').addEventListener('input', (event) => {
+  const selectedRoute = getSelectedRoute();
+  if (selectedRoute) {
+    selectedRoute.label = event.target.value;
+  } else {
+    routeDraftLabel = event.target.value;
+  }
+  renderRoutes();
+});
+document.getElementById('route-label').addEventListener('change', saveAnnotationState);
 document.getElementById('finish-route').addEventListener('click', finishPendingRoute);
 document.getElementById('cancel-route').addEventListener('click', cancelPendingRoute);
+document.getElementById('delete-route-joint').addEventListener('click', removeSelectedRoutePoint);
 
 document.getElementById('clear-annotation-data').addEventListener('click', () => {
   const shouldClear = window.confirm(
@@ -1271,6 +1495,10 @@ document.getElementById('clear-annotation-data').addEventListener('click', () =>
   annotationState = createDefaultAnnotationState();
   pendingRoutePoints = [];
   routePointerPoint = null;
+  selectedRouteId = null;
+  selectedRoutePointIndex = null;
+  routePointDrag = null;
+  routeDraftLabel = '';
   syncAnnotationControls();
   if (currentMapId) syncAnnotationLayers();
   setActiveTool('pan');
@@ -1303,6 +1531,16 @@ document.addEventListener('keydown', (event) => {
   if (event.key === 'Escape') {
     event.preventDefault();
     setActiveTool('pan');
+    return;
+  }
+  if (
+    activeTool === 'route' &&
+    !isEditingControl &&
+    (event.key === 'Delete' || event.key === 'Backspace') &&
+    Number.isInteger(selectedRoutePointIndex)
+  ) {
+    event.preventDefault();
+    removeSelectedRoutePoint();
     return;
   }
   if (activeTool === 'route' && event.key === 'Enter' && pendingRoutePoints.length >= 2) {

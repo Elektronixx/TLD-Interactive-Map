@@ -340,6 +340,7 @@
             preserveAspectRatio="none"
             aria-label="Planned routes"
           ></svg>
+          <div id="route-label-layer" class="map-layer route-label-layer"></div>
           <div id="shape-layer" class="map-layer shape-layer"></div>
           <div id="brush-preview" class="brush-preview" aria-hidden="true"></div>
         </div>
@@ -411,10 +412,15 @@
       <div class="tool-options route-options" data-options-for="route" hidden>
         <label for="route-color">Route colour</label>
         <input id="route-color" type="color" value="#ffb347" />
+        <label for="route-label">Label (optional)</label>
+        <input id="route-label" type="text" maxlength="60" placeholder="e.g. supply run" />
         <div class="route-actions">
           <button id="finish-route" class="subtle-button" type="button" disabled>Finish route</button>
           <button id="cancel-route" class="subtle-button" type="button" disabled>Cancel</button>
         </div>
+        <button id="delete-route-joint" class="subtle-button" type="button" disabled>
+          Delete selected joint
+        </button>
       </div>
 
       <p id="tool-help" class="tool-help">Drag to pan. Use the mouse wheel or pinch to zoom.</p>

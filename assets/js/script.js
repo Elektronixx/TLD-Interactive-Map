@@ -1025,16 +1025,25 @@ const mapTransitions = {
 // ─── Difficulty ───────────────────────────────────────────────────────────────
 
 function setCategory(difficulty) {
+  if (!['pilgrim', 'interloper'].includes(difficulty)) return false;
+  if (currentMapId && (!maps[currentMapId] || !maps[currentMapId][difficulty])) {
+    setAnnotationStatus('This difficulty map is not available', true);
+    return false;
+  }
+  if (currentCategory === difficulty) return true;
+
   currentCategory = difficulty;
+  if (currentMapId) showMap(currentMapId, false);
+  return true;
 }
 
 document.querySelectorAll('.difficulty-buttons button').forEach((button) => {
   button.addEventListener('click', () => {
+    if (!setCategory(button.id.toLowerCase())) return;
     document.querySelectorAll('.difficulty-buttons button').forEach((btn) => {
       btn.classList.remove('active');
     });
     button.classList.add('active');
-    setCategory(button.id.toLowerCase());
   });
 });
 
@@ -1066,7 +1075,7 @@ function scaleMapAreas() {
 
 // ─── Show/Load Map ────────────────────────────────────────────────────────────
 
-function showMap(mapId) {
+function showMap(mapId, resetView = true) {
   document.querySelectorAll('.image-container').forEach((image) => {
     image.classList.remove('active');
     image.style.left = '0px';
@@ -1084,7 +1093,7 @@ function showMap(mapId) {
       setAnnotationStatus('Map image could not be loaded', true);
     };
     img.src = mapImageUrl;
-    resetTransform();
+    if (resetView) resetTransform();
     document.querySelector('#map-image').classList.add('active');
     if (img.complete && img.naturalWidth) {
       window.requestAnimationFrame(syncAnnotationLayers);

@@ -196,6 +196,8 @@ const mapTransitions = {
 
 function setCategory(difficulty) {
   currentCategory = difficulty;
+  // Re-render the open region map with the new difficulty, keeping zoom/pan
+  if (currentMapId) showMap(currentMapId, false);
 }
 
 document.querySelectorAll('.difficulty-buttons button').forEach((button) => {
@@ -236,7 +238,7 @@ function scaleMapAreas() {
 
 // ─── Show/Load Map ────────────────────────────────────────────────────────────
 
-function showMap(mapId) {
+function showMap(mapId, reset = true) {
   document.querySelectorAll('.image-container').forEach((image) => {
     image.classList.remove('active');
     image.style.left = '0px';
@@ -247,7 +249,7 @@ function showMap(mapId) {
   if (mapImageUrl) {
     const img = document.querySelector('#map-image img');
     img.src = mapImageUrl;
-    resetTransform();
+    if (reset) resetTransform();
     document.querySelector('#map-image').classList.add('active');
   } else {
     console.error('Map URL not found for', mapId, currentCategory);

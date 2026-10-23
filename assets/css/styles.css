@@ -71,8 +71,6 @@ button:focus {
   flex: none;
   line-height: 0;
   transform-origin: center center;
-  transition: transform 0.05s ease-out;
-  will-change: transform;
 }
 
 .map-stage > img {

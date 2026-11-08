@@ -21,8 +21,8 @@ window.TLD_MAPS = {
     "interloper": "https://images.steamusercontent.com/ugc/15105071912622724818/4292D2F43FB1CEE290B565670DDD3FD6E44B35A2/"
   },
   "desolation-point": {
-    "pilgrim": "https://images.steamusercontent.com/ugc/16374855890830911712/2945EE16CD7CF9E1C249CE08802E6B947D42F133/",
-    "interloper": "https://images.steamusercontent.com/ugc/9313198189091625864/A30DBFE2A41797C3D2BB99D3A9E6623302808C7B/"
+    "pilgrim": "https://images.steamusercontent.com/ugc/18237935633100530290/B5C4D81301DDE097403A8E3D143D310D3AB903EF/",
+    "interloper": "https://images.steamusercontent.com/ugc/10255661230747189473/F7044BD6A2270874C98E66E2B6884F1126980670/"
   },
   "timberwolf-mountain": {
     "pilgrim": "https://images.steamusercontent.com/ugc/18019470743317950368/FE3E7A2C5308EDFB4C43A5B8BB8230426A9D19A1/",
@@ -45,8 +45,8 @@ window.TLD_MAPS = {
     "interloper": "https://images.steamusercontent.com/ugc/11458033074726588907/497E67C51FD94E97E14086322E2DFDBC5E8BA64F/"
   },
   "bleak-inlet": {
-    "pilgrim": "https://images.steamusercontent.com/ugc/15963475340427975657/8F8932D34BDB1AEECBD81F0DF0D4FF0A8F9B895F/",
-    "interloper": "https://images.steamusercontent.com/ugc/12747202571525077315/F6C8FEC4B25C2DCD7FF82D5D8E0DC38C35D43C68/"
+    "pilgrim": "https://images.steamusercontent.com/ugc/16557922079259863220/8B3A8FCEF85CE29E40EAE8B248CC0B5984B0C17D/",
+    "interloper": "https://images.steamusercontent.com/ugc/12029015630374169102/22B530B0AD9AD2BF7949BD79D0C1A12194309DBB/"
   },
   "ash-canyon": {
     "pilgrim": "https://images.steamusercontent.com/ugc/12423718121825641694/1436C3EE25819AC99F2765E65FF87EB91FEE82C7/",

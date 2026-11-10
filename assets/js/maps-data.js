@@ -56,21 +56,25 @@ window.TLD_MAPS = {
     "pilgrim": "https://images.steamusercontent.com/ugc/13725529750150141786/377C02F990FA45DF8EBAC15FFFA435457554996A/",
     "interloper": "https://images.steamusercontent.com/ugc/13819165643333898105/D35F9682041D607CC43CEF91ECBF28A57F5F2098/"
   },
-  "transfer-pass": {
+  "|tftft|-transfer-pass": {
     "pilgrim": "https://images.steamusercontent.com/ugc/37819645136731165/2F143B1F4452AE9F9688686307AEAFE77D64CD0C/",
     "interloper": "https://images.steamusercontent.com/ugc/37819645136731499/1A9515074C6E2DFE5960A3886C0534BB20265B41/"
   },
-  "forsaken-airfield": {
+  "|tftft|-forsaken-airfield": {
     "pilgrim": "https://images.steamusercontent.com/ugc/16913663260970933264/FB109BD04EA8ED996F248F237F7DDD07BB98CF4B/",
     "interloper": "https://images.steamusercontent.com/ugc/10851226945735149924/44743CB450B469D5596D322623AAC3DF36CAAC04/"
   },
-  "zone-of-contamination": {
+  "|tftft|-zone-of-contamination": {
     "pilgrim": "https://images.steamusercontent.com/ugc/10376660445325975268/BCF107D90B0B9E2D6D301731D0DFC0975F8E7EDB/",
     "interloper": "https://images.steamusercontent.com/ugc/10958718653805267230/55045BF44ACECE678A21417948002A17C0AC973A/"
   },
-  "sundered-pass": {
+  "|tftft|-sundered-pass": {
     "pilgrim": "https://images.steamusercontent.com/ugc/13234845787225905708/3CCD158148CAF4F6E5651269D63AA378F2C7B361/",
     "interloper": "https://images.steamusercontent.com/ugc/16979676319684412643/EE2D7A9F25D9742C4F9256678705F0A0B8286A48/"
+  },
+  "|ir|-port-remnant": {
+    "pilgrim": "https://images.steamusercontent.com/ugc/14216955206204295630/33EBD074037F3AC9FCA01CA2DB3C1DC532DB6F2F/",
+    "interloper": "https://images.steamusercontent.com/ugc/14808442892153759824/427D534021CF55E4F2FEB6061C568BA8E5ED42B4/"
   },
   "ravine": {
     "pilgrim": "https://images.steamusercontent.com/ugc/37819645136730001/C7DC749F7E776CAA177FC3B5A0E679D01CF8B63C/",
@@ -88,7 +92,7 @@ window.TLD_MAPS = {
     "pilgrim": "https://images.steamusercontent.com/ugc/15159145128947408591/484B84DD777B5E0742837BB86857EAA524315342/",
     "interloper": "https://images.steamusercontent.com/ugc/16055965560201475697/BF5677731E7CEA8A282819D01C96AB5486A6E478/"
   },
-  "far-range-branch-line": {
+  "|tftft|-far-range-branch-line": {
     "pilgrim": "https://images.steamusercontent.com/ugc/12967305776514005370/390463FA1E9F539BCB876BF25E3065276D75DED2/",
     "interloper": "https://images.steamusercontent.com/ugc/10893453294679762817/2CC6706F93D63DD60EF48511CB98A2B27EF149A9/"
   },

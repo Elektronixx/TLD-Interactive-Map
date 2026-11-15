@@ -55,19 +55,19 @@
     "pilgrim": "https://images.steamusercontent.com/ugc/13725529750150141786/377C02F990FA45DF8EBAC15FFFA435457554996A/",
     "interloper": "https://images.steamusercontent.com/ugc/13819165643333898105/D35F9682041D607CC43CEF91ECBF28A57F5F2098/"
   },
-  "|tftft|-transfer-pass": {
+  "transfer-pass": {
     "pilgrim": "https://images.steamusercontent.com/ugc/37819645136731165/2F143B1F4452AE9F9688686307AEAFE77D64CD0C/",
     "interloper": "https://images.steamusercontent.com/ugc/37819645136731499/1A9515074C6E2DFE5960A3886C0534BB20265B41/"
   },
-  "|tftft|-forsaken-airfield": {
+  "forsaken-airfield": {
     "pilgrim": "https://images.steamusercontent.com/ugc/16913663260970933264/FB109BD04EA8ED996F248F237F7DDD07BB98CF4B/",
     "interloper": "https://images.steamusercontent.com/ugc/10851226945735149924/44743CB450B469D5596D322623AAC3DF36CAAC04/"
   },
-  "|tftft|-zone-of-contamination": {
+  "zone-of-contamination": {
     "pilgrim": "https://images.steamusercontent.com/ugc/10376660445325975268/BCF107D90B0B9E2D6D301731D0DFC0975F8E7EDB/",
     "interloper": "https://images.steamusercontent.com/ugc/10958718653805267230/55045BF44ACECE678A21417948002A17C0AC973A/"
   },
-  "|tftft|-sundered-pass": {
+  "sundered-pass": {
     "pilgrim": "https://images.steamusercontent.com/ugc/13234845787225905708/3CCD158148CAF4F6E5651269D63AA378F2C7B361/",
     "interloper": "https://images.steamusercontent.com/ugc/16979676319684412643/EE2D7A9F25D9742C4F9256678705F0A0B8286A48/"
   },
@@ -91,7 +91,7 @@
     "pilgrim": "https://images.steamusercontent.com/ugc/15159145128947408591/484B84DD777B5E0742837BB86857EAA524315342/",
     "interloper": "https://images.steamusercontent.com/ugc/16055965560201475697/BF5677731E7CEA8A282819D01C96AB5486A6E478/"
   },
-  "|tftft|-far-range-branch-line": {
+  "far-range-branch-line": {
     "pilgrim": "https://images.steamusercontent.com/ugc/12967305776514005370/390463FA1E9F539BCB876BF25E3065276D75DED2/",
     "interloper": "https://images.steamusercontent.com/ugc/10893453294679762817/2CC6706F93D63DD60EF48511CB98A2B27EF149A9/"
   },

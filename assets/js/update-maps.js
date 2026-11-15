@@ -23,6 +23,7 @@ function normalizeMapName(name) {
     .replace(/\s+/g, '-')
     .replace(/-v\d+(\.\d+)*$/, '')
     .replace(/^\|dlc\|-/i, '')
+    .replace(/^\|tftft\|-/i, '')
     .replace(/-map$/i, '')
     .replace(/'/g, '')
     .replace(/-+/g, '-')

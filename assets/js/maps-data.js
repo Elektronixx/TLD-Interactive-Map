@@ -82,7 +82,7 @@ window.TLD_MAPS = {
   },
   "winding-river-&-carter-hydro-dam": {
     "pilgrim": "https://images.steamusercontent.com/ugc/37819645136732320/2F95CDD280AF1BD5D52072DD0B242519C099F433/",
-    "interloper": "https://images.steamusercontent.com/ugc/37819645136732699/CD74A44711B35D34DC967262E7E90ECAA227B999/"
+    "interloper": "https://images.steamusercontent.com/ugc/16364090180877924205/8814EF648038DB6AC45BC9FE5645CB42198E1915/"
   },
   "crumbling-highway": {
     "pilgrim": "https://images.steamusercontent.com/ugc/37819645136723139/6CF8012DCBEE7E4C21BAA1373D076B13C8D2E545/",
